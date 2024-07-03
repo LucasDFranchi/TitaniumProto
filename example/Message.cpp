@@ -93,8 +93,8 @@ public:
         uint16_t offset = 0;
         memcpy(&this->_timestamp, &in_buffer[offset], sizeof(this->_timestamp));
         offset += sizeof(this->_timestamp);
-        memcpy(this->_buffer, &in_buffer[offset], strlen(this->_buffer) + 1);
-        offset += strlen(this->_buffer) + 1;
+        memcpy(this->_buffer, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
+        offset += strlen(&in_buffer[offset]) + 1;
         memcpy(&this->_id, &in_buffer[offset], sizeof(this->_id));
     
         return Errors::NO_ERROR;
