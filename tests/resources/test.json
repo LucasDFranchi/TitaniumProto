@@ -1,0 +1,20 @@
+{
+    "syntax": "titanium1",
+    "package": "Test",
+    "fields": [
+      {
+        "type": "int64_t",
+        "name": "timestamp"
+      },
+      {
+        "type": "string",
+        "name": "buffer",
+        "maximum_size": 128
+      },
+      {
+        "type": "int32_t",
+        "name": "id"
+      }
+    ]
+  }
+  
