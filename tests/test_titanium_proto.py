@@ -4,8 +4,8 @@ import pytest
 
 from unittest.mock import mock_open, patch
 
-from src import TitaniumProto
-from src import TitaniumField
+from titanium_proto.src import TitaniumFileGenerator
+from titanium_proto.src import TitaniumField
 
 @pytest.fixture
 def temp_dir(tmp_path):
@@ -19,7 +19,7 @@ def temp_dir(tmp_path):
     shutil.rmtree(dir_path)
 
 def test_read_file():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     mock_data = json.dumps({"syntax": "titanium1", "package": "testpkg", "fields": []})
     with patch("builtins.open", mock_open(read_data=mock_data)) as mock_file:
         tp._read_file("dummy_path")
@@ -27,30 +27,30 @@ def test_read_file():
         assert tp._content == json.loads(mock_data)
 
 def test_validate_syntax_valid():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp._content = {"syntax": "titanium1"}
     tp._validate_syntax()
 
 def test_validate_syntax_invalid():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp._content = {"syntax": "invalid_syntax"}
     with pytest.raises(ValueError, match="Invalid syntax: protocol file must have 'syntax' set to 'titanium1'."):
         tp._validate_syntax()
 
 def test_update_package_name():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp._content = {"package": "testpkg"}
     tp._update_package_name()
     assert tp._package_name == "testpkg"
 
 def test_update_package_name_missing():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp._content = {}
     with pytest.raises(ValueError, match="Missing Package Name in protocol file."):
         tp._update_package_name()
 
 def test_parse_fields_valid():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp._content = {
         "fields": [
             {"name": "field1", "type": "uint8_t"},
@@ -80,7 +80,7 @@ def test_parse_fields_valid():
     assert tp._fields[2].size == 128
     
 def test_parse_fields_invalid_type():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp._content = {
         "fields": [
             {"name": "field1", "type": "unsupported_type"},
@@ -90,7 +90,7 @@ def test_parse_fields_invalid_type():
         tp._parse_fields()
 
 def test_generate_cpp_file(temp_dir):   
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp.import_and_parse_proto_file("./tests/resources/test.json")
     tp.generate_cpp_file(f"{temp_dir}/")
     
@@ -103,12 +103,12 @@ def test_generate_cpp_file(temp_dir):
     assert generated_cpp_content == expected_cpp_content
 
 def test_generate_includes():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     includes = tp._generate_includes()
     assert includes == '#include "stdint.h"\n#include "string.h"\n\n'
 
 def test_generate_errors_namespace():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     errors_namespace = tp._generate_errors_namespace()
     expected_str = (
         "namespace Errors {\n"
@@ -121,7 +121,7 @@ def test_generate_errors_namespace():
     assert errors_namespace == expected_str
 
 def test_generate_classname():
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     tp._package_name = "testpkg"
     classname = tp._generate_classname()
     expected_str = (

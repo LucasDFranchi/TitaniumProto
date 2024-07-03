@@ -16,13 +16,16 @@ coverage = "^5.5"
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+titanium_proto = 'titanium_proto.titanium_proto:main'
+
 [tool.coverage.run]
 branch = true
-source = ["src/"]
+source = ["titanium_proto/"]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
 
 [tool.pytest.ini_options]
-addopts = "--cov=src/ --cov-report=term-missing"
+addopts = "--cov=titanium_proto/ --cov-report=term-missing"

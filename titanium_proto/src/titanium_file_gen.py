@@ -3,7 +3,7 @@ import json
 from .titanium_field import TitaniumField
 
 
-class TitaniumProto:
+class TitaniumFileGenerator:
     _SUPPORTED_TYPES = [
         "uint8_t",
         "int8_t",
