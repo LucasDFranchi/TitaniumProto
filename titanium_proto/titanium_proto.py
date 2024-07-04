@@ -1,6 +1,6 @@
 import argparse
 
-from src import TitaniumProto
+from .src import TitaniumFileGenerator
 
 def handle_arguments():
     """
@@ -33,7 +33,7 @@ def handle_arguments():
 
 def main():
     args = handle_arguments()
-    tp = TitaniumProto()
+    tp = TitaniumFileGenerator()
     
     tp.import_and_parse_proto_file(args.file_path)
     tp.generate_cpp_file()

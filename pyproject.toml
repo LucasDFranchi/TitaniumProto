@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "Titanium Proto"
-version = "0.1.0"
+version = "0.1.5"
 description = ""
 authors = ["Lucas D. Franchi <LucasD.Franchi@gmail.com>"]
 
@@ -17,11 +17,11 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-titanium_proto = 'titanium_proto.titanium_proto:main'
+titanium-proto = 'titanium-proto.titanium-proto:main'
 
 [tool.coverage.run]
 branch = true
-source = ["titanium_proto/"]
+source = ["titanium-proto/"]
 
 [tool.coverage.report]
 show_missing = true
