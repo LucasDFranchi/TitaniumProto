@@ -83,7 +83,9 @@ class TitaniumFileGenerator:
         Returns:
             str: A string containing include statements for 'stdint.h' and 'string.h'.
         """
-        method_str = '#include "stdint.h"\n' '#include "string.h"\n\n'
+        method_str = f'#ifndef {self._package_name.upper()}_PROTO_H\n'
+        method_str += f'#define {self._package_name.upper()}_PROTO_H\n\n'
+        method_str += '#include "stdint.h"\n' '#include "string.h"\n\n'
 
         return method_str
 
@@ -159,8 +161,9 @@ class TitaniumFileGenerator:
         for titanium_field in self._fields:
             end_string += self._generate_private_variables(titanium_field)
 
-        end_string += "};"
-
+        end_string += "};\n\n"
+        end_string += f"#endif /* {self._package_name.upper()}_PROTO_H */ \n\n"
+        
         return end_string
 
     def _generate_block_size_variables(self, titanium_field: TitaniumField):
@@ -397,5 +400,5 @@ class TitaniumFileGenerator:
         file_str += self._generate_public_methods()
         file_str += self._generate_private_variables_end_block()
         
-        with open(f"{redirect_outfile}{self._package_name}.cpp", 'w') as file:
+        with open(f"{redirect_outfile}{self._package_name}Proto.h", 'w') as file:
             file.write(file_str)

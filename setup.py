@@ -1,20 +1,16 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="Titanium Proto",
-    version="0.1.0",
+    name="titanium-proto",
+    version="0.1.5",
     description="A Python library to generate C++ classes from JSON for working with structs.",
     author="Lucas D. Franchi",
     author_email="LucasD.Franchi@gmail.com",
     packages=find_packages(),
     python_requires=">=3.7",
-    install_requires=[
-        # Add any dependencies here if required
-    ],
     entry_points={
         'console_scripts': [
             'titanium-proto = titanium_proto.titanium_proto:main',
-            # Define command-line scripts here if applicable
         ],
     },
     extras_require={

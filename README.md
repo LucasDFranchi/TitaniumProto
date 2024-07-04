@@ -15,13 +15,28 @@ I created this project to streamline the process of defining and managing data s
 
 ## Installation
 
-To install TitaniumProto, clone the repository and install dependencies:
+To install TitaniumProto, you can use pip or clone the repository and install dependencies:
+
+Windows
+
+```bash
+pip install titanium-proto
+```
+
+Linux
+
+```bash
+pip3 install titanium-proto
+```
+
+Installation using clone and poetry:
 
 ```bash
 git clone https://github.com/your_username/titanium-proto.git
 cd titanium-proto
 poetry install
 ```
+
 ### Usage
 
 Define Your JSON Structure: Create a JSON file following the specified format.
@@ -62,7 +77,7 @@ Consider a JSON file example.json:
 Generate the C++ class:
 
 ```bash
-python generate_cpp_file.py -fp example.json
+titanium-proto -fp example.json
 ```
 The above command creates a C++ class ExamplePackageProto with methods for accessing, serializing, and deserializing fields.
 Contributing
