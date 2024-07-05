@@ -12,6 +12,19 @@ class TitaniumField:
         self._type_name = field_dict.get("type")
         self._variable_name = field_dict.get("name")
         self._block_size = field_dict.get("maximum_size", self._SINGLE_BLOCK)
+        
+    def _to_pascal_case(self, snake_str: str) -> str:
+        """
+        Converts a snake_case string to PascalCase.
+
+        Args:
+            snake_str (str): The snake_case string to convert.
+
+        Returns:
+            str: The converted PascalCase string.
+            """
+        components = snake_str.split('_')
+        return ''.join(x.title() for x in components)
 
     @property
     def c_type_name(self):
@@ -71,7 +84,7 @@ class TitaniumField:
         Returns:
             str: The capitalized variable name.
         """
-        return f"{self._variable_name.capitalize()}"
+        return f"{self._to_pascal_case(self._variable_name)}"
 
     @property
     def defined_size(self):

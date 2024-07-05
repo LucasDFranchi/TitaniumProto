@@ -89,24 +89,6 @@ class TitaniumFileGenerator:
 
         return method_str
 
-    def _generate_errors_namespace(self):
-        """
-        Generates a C++ namespace for error codes.
-
-        Returns:
-            str: A string containing error codes within a 'Errors' namespace.
-        """
-        method_str = (
-            "namespace Errors {\n"
-            "    constexpr int8_t NO_ERROR = 0;\n"
-            "    constexpr int8_t INVALID_BUFFER_PTR = -1;\n"
-            "    constexpr int8_t INVALID_BUFFER_SIZE = -2;\n"
-            "    constexpr int8_t OVERFLOW_BUFFER = -3;\n"
-            "}\n\n"
-        )
-
-        return method_str
-
     def _generate_classname(self):
         """
         Generates a C++ class definition based on the package name.
@@ -137,6 +119,12 @@ class TitaniumFileGenerator:
         public_methods_string += "\n"
         for titanium_field in self._fields:
             public_methods_string += self._generate_get_methods(titanium_field)
+        public_methods_string += "\n"
+        public_methods_string += self._generate_get_serialized_size_method()
+        public_methods_string += "\n"
+        public_methods_string += self._generate_get_maximum_size_method()
+        public_methods_string += "\n"
+        public_methods_string += self._generate_get_static_maximum_size_method()
         public_methods_string += "\n"
 
         for titanium_field in self._fields:
@@ -201,6 +189,75 @@ class TitaniumFileGenerator:
             get_method_str = f"    {titanium_field.c_type_name} Get{titanium_field.capitalized_name}(void) const {{  return this->{titanium_field.internal_name}; }}\n"
 
         return get_method_str
+    
+    def _generate_get_serialized_size_method(self):
+        """
+        Generates the GetSerializedSize method for the class.
+
+        This method calculates the serialized size of all fields in the class.
+        For string fields, it includes the length of the string plus one for the null terminator.
+        For other fields, it includes the size of the field.
+
+        Returns:
+            str: The generated GetSerializedSize method as a string.
+        """
+        get_method_str = "    int16_t GetSerializedSize(void) const {\n"
+        field_size_list = []
+        
+        for field in self._fields:
+            if field.type_name == "string":
+                field_size_list.append(f"(strlen(this->{field.internal_name}) + 1)")
+            else:
+                field_size_list.append(f"sizeof(this->{field.internal_name})")
+
+        joined_str = " + ".join(field_size_list)
+        
+        get_method_str += f"        return ({joined_str});\n"            
+        return get_method_str + "    }\n"
+    
+    def _generate_get_static_maximum_size_method(self):
+        """
+        Generates the GetStaticMaxSize method for the class.
+
+        This method calculates the maximum size of all fields in the class as a static method.
+        For string fields, it uses the defined size of the string.
+        For other fields, it includes the size of the field.
+
+        Returns:
+            str: The generated GetStaticMaxSize method as a string.
+        """
+        get_method_str = "    static int16_t GetStaticMaxSize(void) {\n"
+        field_size_list = []
+        
+        for field in self._fields:
+            if field.type_name == "string":
+                field_size_list.append(f"{field.defined_size}")
+            else:
+                field_size_list.append(f"sizeof({field.type_name})")
+
+        joined_str = " + ".join(field_size_list)
+        
+        get_method_str += f"        return ({joined_str});\n"            
+        return get_method_str + "    }\n"
+    
+    def _generate_get_maximum_size_method(self):
+        """
+        Generates the GetMaxSize method for the class.
+
+        This method calculates the maximum size of all fields in the class.
+        It includes the size of each field.
+
+        Returns:
+            str: The generated GetMaxSize method as a string.
+        """
+        get_method_str = "    int16_t GetMaxSize(void) const {\n"
+        
+        fields_size_code_max = " + ".join(
+            [f"sizeof(this->{field.internal_name})" for field in self._fields]
+        )
+        
+        get_method_str += f"        return ({fields_size_code_max});\n"            
+        return get_method_str + "    }\n"
 
     def _generate_update_methods(self, titanium_field: TitaniumField):
         """
@@ -212,26 +269,26 @@ class TitaniumFileGenerator:
         if titanium_field.is_array:
             method_str = (
                 f"    int8_t Update{titanium_field.capitalized_name}({titanium_field.c_type_name}* value) {{\n"
-                f"        if (value == nullptr || this->{titanium_field.internal_name} == nullptr) {{\n"
-                f"            return Errors::INVALID_BUFFER_PTR;\n"
+                f"        if (value == nullptr) {{\n"
+                f"            return -1;\n"
                 f"        }}\n\n"
                 f"        size_t value_length = strlen(value) + 1;\n\n"
                 f"        if ((value_length == 0) || {titanium_field.defined_size} == 0) {{\n"
-                f"            return Errors::INVALID_BUFFER_SIZE;\n"
+                f"            return -2;\n"
                 f"        }}\n\n"
                 f"        if (value_length > {titanium_field.defined_size}) {{\n"
-                f"            return Errors::OVERFLOW_BUFFER;\n"
+                f"            return -3;\n"
                 f"        }}\n\n"
                 f"        memset(this->{titanium_field.internal_name}, 0, {titanium_field.defined_size});\n"
                 f"        memcpy(this->{titanium_field.internal_name}, value, value_length);\n\n"
-                f"        return Errors::NO_ERROR;\n"
+                f"        return 0;\n"
                 f"    }}\n\n"
             )
         else:
             method_str = (
                 f"    int8_t Update{titanium_field.capitalized_name}({titanium_field.c_type_name} value) {{\n"
                 f"        this->{titanium_field.internal_name} = value;\n"
-                f"        return Errors::NO_ERROR;\n"
+                f"        return 0;\n"
                 f"    }}\n\n"
             )
 
@@ -294,13 +351,14 @@ class TitaniumFileGenerator:
             str: A string containing the C++ code for the DeSerialize method.
         """
         field_size_list = []
+        minimal_string_size = 0
         for index, field in enumerate(self._fields):
             if field.type_name == "string":
-                field_size_list.append(f"1")
+                minimal_string_size += 1
             else:
                 field_size_list.append(f"sizeof(this->{field.internal_name})")
-
-            fields_size_code_min = " + ".join(field_size_list)
+        field_size_list.append(str(minimal_string_size))
+        fields_size_code_min = " + ".join(field_size_list)
 
         fields_size_code_max = " + ".join(
             [f"sizeof(this->{field.internal_name})" for field in self._fields]
@@ -309,15 +367,15 @@ class TitaniumFileGenerator:
         method_str = (
             "    int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {\n"
             f"        if (in_buffer == nullptr) {{\n"
-            f"            return Errors::INVALID_BUFFER_PTR;\n"
+            f"            return -1;\n"
             f"        }}\n\n"
             f"        uint16_t deserialized_min_size = {fields_size_code_min};\n"
             f"        uint16_t deserialized_max_size = {fields_size_code_max};\n\n"
             f"        if (in_buffer_size < deserialized_min_size) {{\n"
-            f"            return Errors::OVERFLOW_BUFFER;\n"
+            f"            return -3;\n"
             f"        }}\n\n"
             f"        if (in_buffer_size > deserialized_max_size) {{\n"
-            f"            return Errors::OVERFLOW_BUFFER;\n"
+            f"            return -3;\n"
             f"        }}\n\n"
         )
 
@@ -341,7 +399,7 @@ class TitaniumFileGenerator:
             if index != (len(self._fields) - 1):
                 method_str += f"        offset += {field_size_code};\n"
 
-        method_str += "    \n        return Errors::NO_ERROR;\n    }"
+        method_str += "    \n        return 0;\n    }"
 
         return method_str
 
@@ -395,7 +453,6 @@ class TitaniumFileGenerator:
         file_str = ""
         
         file_str = self._generate_includes()
-        file_str += self._generate_errors_namespace()
         file_str += self._generate_classname()
         file_str += self._generate_public_methods()
         file_str += self._generate_private_variables_end_block()
