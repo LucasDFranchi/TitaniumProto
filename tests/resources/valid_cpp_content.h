@@ -1,12 +1,8 @@
+#ifndef TEST_PROTO_H
+#define TEST_PROTO_H
+
 #include "stdint.h"
 #include "string.h"
-
-namespace Errors {
-    constexpr int8_t NO_ERROR = 0;
-    constexpr int8_t INVALID_BUFFER_PTR = -1;
-    constexpr int8_t INVALID_BUFFER_SIZE = -2;
-    constexpr int8_t OVERFLOW_BUFFER = -3;
-}
 
 class TestProtobuf {
 public:
@@ -19,35 +15,47 @@ public:
     const char* GetBuffer(void) const {  return this->_buffer; }
     int32_t GetId(void) const {  return this->_id; }
 
+    int16_t GetSerializedSize(void) const {
+        return (sizeof(this->_timestamp) + (strlen(this->_buffer) + 1) + sizeof(this->_id));
+    }
+
+    int16_t GetMaxSize(void) const {
+        return (sizeof(this->_timestamp) + sizeof(this->_buffer) + sizeof(this->_id));
+    }
+
+    static int16_t GetStaticMaxSize(void) {
+        return (sizeof(int64_t) + BUFFER_SIZE + sizeof(int32_t));
+    }
+
     int8_t UpdateTimestamp(int64_t value) {
         this->_timestamp = value;
-        return Errors::NO_ERROR;
+        return 0;
     }
 
     int8_t UpdateBuffer(char* value) {
-        if (value == nullptr || this->_buffer == nullptr) {
-            return Errors::INVALID_BUFFER_PTR;
+        if (value == nullptr) {
+            return -1;
         }
 
         size_t value_length = strlen(value) + 1;
 
         if ((value_length == 0) || BUFFER_SIZE == 0) {
-            return Errors::INVALID_BUFFER_SIZE;
+            return -2;
         }
 
         if (value_length > BUFFER_SIZE) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         memset(this->_buffer, 0, BUFFER_SIZE);
         memcpy(this->_buffer, value, value_length);
 
-        return Errors::NO_ERROR;
+        return 0;
     }
 
     int8_t UpdateId(int32_t value) {
         this->_id = value;
-        return Errors::NO_ERROR;
+        return 0;
     }
 
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
@@ -74,18 +82,18 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         if (in_buffer == nullptr) {
-            return Errors::INVALID_BUFFER_PTR;
+            return -1;
         }
 
-        uint16_t deserialized_min_size = sizeof(this->_timestamp) + 1 + sizeof(this->_id);
+        uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_id) + 1;
         uint16_t deserialized_max_size = sizeof(this->_timestamp) + sizeof(this->_buffer) + sizeof(this->_id);
 
         if (in_buffer_size < deserialized_min_size) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         if (in_buffer_size > deserialized_max_size) {
-            return Errors::OVERFLOW_BUFFER;
+            return -3;
         }
 
         memset(this->_buffer, 0, BUFFER_SIZE);
@@ -97,7 +105,7 @@ public:
         offset += strlen(&in_buffer[offset]) + 1;
         memcpy(&this->_id, &in_buffer[offset], sizeof(this->_id));
     
-        return Errors::NO_ERROR;
+        return 0;
     }
 
 private:
@@ -105,3 +113,6 @@ private:
     char _buffer[128] = {0};
     int32_t _id = 0;
 };
+
+#endif /* TEST_PROTO_H */ 
+

@@ -94,31 +94,26 @@ def test_generate_cpp_file(temp_dir):
     tp.import_and_parse_proto_file("./tests/resources/test.json")
     tp.generate_cpp_file(f"{temp_dir}/")
     
-    with open(f"{temp_dir}/Test.cpp", 'r') as generated_cpp_file:
+    with open(f"{temp_dir}/TestProto.h", 'r') as generated_cpp_file:
         generated_cpp_content = generated_cpp_file.read()
         
-    with open("./tests/resources/valid_cpp_content.cpp", 'r') as generated_cpp_file:
+    with open("./tests/resources/valid_cpp_content.h", 'r') as generated_cpp_file:
         expected_cpp_content = generated_cpp_file.read()
         
     assert generated_cpp_content == expected_cpp_content
 
 def test_generate_includes():
     tp = TitaniumFileGenerator()
+    tp._package_name = "Test"
     includes = tp._generate_includes()
-    assert includes == '#include "stdint.h"\n#include "string.h"\n\n'
+    expected_string = (
+        "#ifndef TEST_PROTO_H\n"
+        "#define TEST_PROTO_H\n\n"
+        '#include "stdint.h"\n'
+        '#include "string.h"\n\n'
+        )
 
-def test_generate_errors_namespace():
-    tp = TitaniumFileGenerator()
-    errors_namespace = tp._generate_errors_namespace()
-    expected_str = (
-        "namespace Errors {\n"
-        "    constexpr int8_t NO_ERROR = 0;\n"
-        "    constexpr int8_t INVALID_BUFFER_PTR = -1;\n"
-        "    constexpr int8_t INVALID_BUFFER_SIZE = -2;\n"
-        "    constexpr int8_t OVERFLOW_BUFFER = -3;\n"
-        "}\n\n"
-    )
-    assert errors_namespace == expected_str
+    assert includes == expected_string
 
 def test_generate_classname():
     tp = TitaniumFileGenerator()
