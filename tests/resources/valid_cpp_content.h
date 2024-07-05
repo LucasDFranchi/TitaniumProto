@@ -1,19 +1,19 @@
 /**
- * @file MessageProtobuf.h
+ * @file TestProtobuf.h
  * @brief Auto-generated header file generated.
  */
 
-#ifndef MESSAGE_PROTO_H
-#define MESSAGE_PROTO_H
+#ifndef TEST_PROTO_H
+#define TEST_PROTO_H
 
 #include "stdint.h"
 #include "string.h"
 #include "jsmn.h"
 
-class MessageProtobuf {
+class TestProtobuf {
 public:
-    MessageProtobuf() = default;
-    ~MessageProtobuf() = default;
+    TestProtobuf() = default;
+    ~TestProtobuf() = default;
 
     static constexpr uint16_t BUFFER_SIZE = 128;
 
@@ -232,4 +232,4 @@ private:
     const uint8_t _NUM_TOKENS  = 7;
 };
 
-#endif /* MESSAGE_PROTO_H */
+#endif /* TEST_PROTO_H */
