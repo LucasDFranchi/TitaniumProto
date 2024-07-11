@@ -1,3 +1,8 @@
+/**
+ * @file TestProtobuf.h
+ * @brief Auto-generated header file generated.
+ */
+
 #ifndef TEST_PROTO_H
 #define TEST_PROTO_H
 
@@ -11,9 +16,9 @@ public:
 
     static constexpr uint16_t BUFFER_SIZE = 128;
 
-    int64_t GetTimestamp(void) const {  return this->_timestamp; }
-    const char* GetBuffer(void) const {  return this->_buffer; }
-    int32_t GetId(void) const {  return this->_id; }
+    int64_t GetTimestamp(void) const { return this->_timestamp; }
+    const char* GetBuffer(void) const { return this->_buffer; }
+    int32_t GetId(void) const { return this->_id; }
 
     int16_t GetSerializedSize(void) const {
         return (sizeof(this->_timestamp) + (strlen(this->_buffer) + 1) + sizeof(this->_id));
@@ -76,7 +81,7 @@ public:
         memcpy(&out_buffer[offset], this->_buffer, strlen(this->_buffer) + 1);
         offset += strlen(this->_buffer) + 1;
         memcpy(&out_buffer[offset], &this->_id, sizeof(this->_id));
-    
+
         return serialized_size;
     }
 
@@ -88,11 +93,7 @@ public:
         uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_id) + 1;
         uint16_t deserialized_max_size = sizeof(this->_timestamp) + sizeof(this->_buffer) + sizeof(this->_id);
 
-        if (in_buffer_size < deserialized_min_size) {
-            return -3;
-        }
-
-        if (in_buffer_size > deserialized_max_size) {
+        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
             return -3;
         }
 
@@ -104,7 +105,7 @@ public:
         memcpy(this->_buffer, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
         offset += strlen(&in_buffer[offset]) + 1;
         memcpy(&this->_id, &in_buffer[offset], sizeof(this->_id));
-    
+
         return 0;
     }
 
@@ -114,5 +115,4 @@ private:
     int32_t _id = 0;
 };
 
-#endif /* TEST_PROTO_H */ 
-
+#endif /* TEST_PROTO_H */

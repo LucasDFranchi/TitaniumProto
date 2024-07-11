@@ -32,7 +32,7 @@ def main():
     tp = TitaniumFileGenerator()
     
     tp.import_and_parse_proto_file(args.file_path)
-    tp.generate_cpp_file(args.output_path)
+    tp.generate_header_file(args.output_path)
 
 
 if __name__ == "__main__":

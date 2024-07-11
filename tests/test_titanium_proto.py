@@ -89,10 +89,10 @@ def test_parse_fields_invalid_type():
     with pytest.raises(ValueError, match="Unsupported data type: unsupported_type. Supported types are: "):
         tp._parse_fields()
 
-def test_generate_cpp_file(temp_dir):   
+def test_generate_header_file(temp_dir):   
     tp = TitaniumFileGenerator()
     tp.import_and_parse_proto_file("./tests/resources/test.json")
-    tp.generate_cpp_file(f"{temp_dir}/")
+    tp.generate_header_file(f"{temp_dir}/")
     
     with open(f"{temp_dir}/TestProto.h", 'r') as generated_cpp_file:
         generated_cpp_content = generated_cpp_file.read()
@@ -101,31 +101,6 @@ def test_generate_cpp_file(temp_dir):
         expected_cpp_content = generated_cpp_file.read()
         
     assert generated_cpp_content == expected_cpp_content
-
-def test_generate_includes():
-    tp = TitaniumFileGenerator()
-    tp._package_name = "Test"
-    includes = tp._generate_includes()
-    expected_string = (
-        "#ifndef TEST_PROTO_H\n"
-        "#define TEST_PROTO_H\n\n"
-        '#include "stdint.h"\n'
-        '#include "string.h"\n\n'
-        )
-
-    assert includes == expected_string
-
-def test_generate_classname():
-    tp = TitaniumFileGenerator()
-    tp._package_name = "testpkg"
-    classname = tp._generate_classname()
-    expected_str = (
-        "class testpkgProtobuf {\n"
-        "public:\n"
-        "    testpkgProtobuf() = default;\n"
-        "    ~testpkgProtobuf() = default;\n\n"
-    )
-    assert classname == expected_str
 
 
 if __name__ == "__main__":

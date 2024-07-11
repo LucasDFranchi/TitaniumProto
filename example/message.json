@@ -1,25 +1,19 @@
 {
-    "syntax": "titanium1",
-    "package": "Message",
-    "fields": [
-      {
-        "type": "int64_t",
-        "name": "timestamp"
-      },
-      {
-        "type": "string",
-        "name": "buffer",
-        "maximum_size": 32
-      },
-      {
-        "type": "string",
-        "name": "buffer_2",
-        "maximum_size": 128
-      },
-      {
-        "type": "int32_t",
-        "name": "id"
-      }
-    ]
-  }
-  
+  "syntax": "titanium1",
+  "package": "Test",
+  "fields": [
+    {
+      "type": "uint64_t",
+      "name": "timestamp"
+    },
+    {
+      "type": "string",
+      "name": "buffer",
+      "maximum_size": 128
+    },
+    {
+      "type": "int32_t",
+      "name": "id"
+    }
+  ]
+}
