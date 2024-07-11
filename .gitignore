@@ -164,4 +164,5 @@ cython_debug/
 # Generated header files
 *.h
 !tests/resources/*.h
+!tests/cpp/jsmn.h
 !example/MessageProto.h

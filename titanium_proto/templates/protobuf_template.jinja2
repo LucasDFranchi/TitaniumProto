@@ -60,6 +60,25 @@ public:
 
         return 0;
     }
+
+    int8_t Update{{ field.capitalized_name }}(const {{ field.c_type_name }}* value, uint16_t string_size) {
+        if (value == nullptr) {
+            return -1;
+        }
+
+        if ({{ field.defined_size }} == 0) {
+            return -2;
+        }
+
+        if (string_size > {{ field.defined_size }}) {
+            return -3;
+        }
+
+        memset(this->{{ field.internal_name }}, 0, {{ field.defined_size }});
+        memcpy(this->{{ field.internal_name }}, value, string_size);
+
+        return 0;
+    }
 {% else %}
     int8_t Update{{ field.capitalized_name }}({{  field.c_type_name }} value) {
         this->{{ field.internal_name }} = value;
@@ -189,7 +208,7 @@ public:
             }
 {%- if field.is_array %}
 
-            this->Update{{ field.capitalized_name }}(in_buffer + value.start);
+            this->Update{{ field.capitalized_name }}(in_buffer + value.start, value.end - value.start);
 {%- else %}
 
             this->Update{{ field.capitalized_name }}(atoi(in_buffer + value.start));

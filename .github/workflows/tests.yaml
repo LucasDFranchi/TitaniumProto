@@ -19,7 +19,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.12'
+          python-version: '3.10'
 
       - name: Install Python dependencies
         run: |
@@ -29,7 +29,7 @@ jobs:
 
       - name: Run Python tests
         run: |
-          poetry run pytest tests/
+          poetry run pytest tests/ -W ignore::DeprecationWarning
 
       - name: Install Unity
         run: |
@@ -44,7 +44,8 @@ jobs:
       - name: Build and Run C++ tests
         run: |
           cd $GITHUB_WORKSPACE  # Navigate back to the root directory of your repository
-          g++ -o test_executable example/test_gen_code.cpp -IUnity/src Unity/src/unity.c
+          poetry run python3 -m titanium_proto.titanium_proto -fp ./tests/cpp/test.json -o ./tests/cpp/
+          g++ -o test_executable tests/cpp/test_gen_code.cpp -IUnity/src -I./ Unity/src/unity.c 
           ./test_executable
 
       - name: Upload coverage

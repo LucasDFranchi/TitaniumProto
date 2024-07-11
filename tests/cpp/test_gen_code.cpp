@@ -1,5 +1,5 @@
 #include "unity.h"
-#include "TestProtobuf.h"
+#include "TestProto.h"
 
 void setUp(void) {
     // Set up initial state before each test.
@@ -49,6 +49,22 @@ void test_Serialize(void) {
     TEST_ASSERT_GREATER_THAN_INT16(0, serialized_size);
 }
 
+void test_SerializeJson(void) {
+    TestProtobuf protobuf;
+    char buffer[512];  // Adjust size as necessary
+
+    const char* expected_json = "{\n    \"timestamp\": 1234567890,\n    \"buffer\": \"Hello, World!\",\n    \"id\": 987\n}";
+
+    // Set values
+    protobuf.UpdateTimestamp(1234567890);
+    protobuf.UpdateBuffer("Hello, World!");
+    protobuf.UpdateId(987);
+
+    auto deserializeResult = protobuf.SerializeJson(buffer, sizeof(buffer));
+    TEST_ASSERT_GREATER_THAN_INT16(0, deserializeResult);
+    TEST_ASSERT_EQUAL_STRING(expected_json, buffer);
+}
+
 void test_Deserialize(void) {
     TestProtobuf protobuf;
     char buffer[512];  // Adjust size as necessary
@@ -73,6 +89,31 @@ void test_Deserialize(void) {
     TEST_ASSERT_EQUAL_INT32(987, protobuf.GetId());
 }
 
+void test_DeSerializeJson(void) {
+    TestProtobuf protobuf;
+    char buffer[512];  // Adjust size as necessary
+
+    // Serialize data into buffer
+    protobuf.UpdateTimestamp(1234567890);
+    protobuf.UpdateBuffer("Hello World!");
+    protobuf.UpdateId(987);
+    int16_t serialized_size = protobuf.SerializeJson(buffer, sizeof(buffer));
+
+    // Clear existing data in protobuf instance
+    protobuf.UpdateTimestamp(0);
+    protobuf.UpdateBuffer("");
+    protobuf.UpdateId(0);
+
+    // Perform deserialization
+    TEST_ASSERT_EQUAL_INT8(0, protobuf.DeSerializeJson(buffer, sizeof(buffer)));
+
+
+    // Check if deserialization populated values correctly
+    TEST_ASSERT_EQUAL_UINT64(1234567890, protobuf.GetTimestamp());
+    TEST_ASSERT_EQUAL_STRING("Hello World!", protobuf.GetBuffer());
+    TEST_ASSERT_EQUAL_INT32(987, protobuf.GetId());
+}
+
 // Define more test cases as needed
 
 int main(void) {
@@ -83,7 +124,9 @@ int main(void) {
     RUN_TEST(test_UpdateBuffer);
     RUN_TEST(test_UpdateId);
     RUN_TEST(test_Serialize);
+    RUN_TEST(test_SerializeJson);
     RUN_TEST(test_Deserialize);
+    RUN_TEST(test_DeSerializeJson);
 
     // Add more RUN_TEST macros for additional tests
 

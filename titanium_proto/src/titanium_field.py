@@ -128,7 +128,7 @@ class TitaniumField:
             "int64_t": "%lld",
             "float": "%f",
             "double": "%lf",
-            "string": "%s",
+            "string": "\"%s\"",
         }
     
         return type_map.get(self.type_name, None)

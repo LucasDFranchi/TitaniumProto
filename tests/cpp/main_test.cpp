@@ -1,9 +1,9 @@
 #include <iostream>
-#include "MessageProto.h"
+#include "TestProto.h"
 
 int main() {
-    // Create an instance of MessageProtobuf
-    MessageProtobuf testObj;
+    // Create an instance of TestProtobuf
+    TestProtobuf testObj;
 
     // Update values
     testObj.UpdateTimestamp(1234567890);
@@ -11,8 +11,8 @@ int main() {
     testObj.UpdateId(987);
 
     // Serialize to a buffer
-    char serializedBuffer[MessageProtobuf::BUFFER_SIZE];
-    uint16_t serializedSize = testObj.Serialize(serializedBuffer, MessageProtobuf::BUFFER_SIZE);
+    char serializedBuffer[TestProtobuf::BUFFER_SIZE];
+    uint16_t serializedSize = testObj.Serialize(serializedBuffer, TestProtobuf::BUFFER_SIZE);
 
     if (serializedSize > 0) {
         std::cout << "Serialization successful. Serialized size: " << serializedSize << std::endl;
@@ -25,7 +25,7 @@ int main() {
         std::cout << std::endl;
 
         // Create a new instance to deserialize into
-        MessageProtobuf deserializedObj;
+        TestProtobuf deserializedObj;
 
         // Deserialize
         int8_t deserializeResult = deserializedObj.DeSerialize(serializedBuffer, serializedSize);
@@ -51,7 +51,7 @@ int main() {
         }
 
         // Create a new instance to deserialize into
-        MessageProtobuf deserializedJsonObj;
+        TestProtobuf deserializedJsonObj;
 
         // Deserialize
         int8_t deserializeJsonResult = deserializedJsonObj.DeSerializeJson(buffer, sizeof(buffer));
