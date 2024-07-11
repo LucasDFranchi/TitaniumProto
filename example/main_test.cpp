@@ -40,12 +40,31 @@ int main() {
         } else {
             std::cerr << "Deserialization failed with error code: " << static_cast<int>(deserializeResult) << std::endl;
         }
+
         char buffer[1024] = {0};
         deserializeResult = deserializedObj.SerializeJson(buffer, sizeof(buffer));
+
         if (deserializeResult > 0) {
             std::cout << buffer << std::endl;        
         } else {
             std::cerr << "Deserialization failed with error code: " << static_cast<int>(deserializeResult) << std::endl;
+        }
+
+        // Create a new instance to deserialize into
+        TestProtobuf deserializedJsonObj;
+
+        // Deserialize
+        int8_t deserializeJsonResult = deserializedJsonObj.DeSerializeJson(buffer, sizeof(buffer));
+
+        if (deserializeJsonResult == 0) {
+            std::cout << "Deserialization successful." << std::endl;
+
+            // Get and print deserialized values
+            std::cout << "Deserialized timestamp: " << deserializedJsonObj.GetTimestamp() << std::endl;
+            std::cout << "Deserialized buffer: " << deserializedJsonObj.GetBuffer() << std::endl;
+            std::cout << "Deserialized id: " << deserializedJsonObj.GetId() << std::endl;
+        } else {
+            std::cerr << "Deserialization failed with error code: " << static_cast<int>(deserializeJsonResult) << std::endl;
         }
 
     } else {

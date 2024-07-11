@@ -3,37 +3,53 @@ name: Run Unit Tests
 on:
   push:
     branches:
-      - main  # Adjust branch name as needed
+      - main
   pull_request:
     branches:
-      - main  # Adjust branch name as needed
+      - main
 
 jobs:
   test:
-    runs-on: ubuntu-latest  # Use the latest version of Ubuntu
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2  # Action to checkout the repository
+        uses: actions/checkout@v2
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.12'  # Specify the Python version used in your project
+          python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install poetry
           poetry install
 
-      - name: Run tests
+      - name: Run Python tests
         run: |
           poetry run pytest tests/
+
+      - name: Install Unity
+        run: |
+          git clone https://github.com/ThrowTheSwitch/Unity
+          cd Unity
+          mkdir build
+          cd build
+          cmake ..
+          make
+          sudo make install
+
+      - name: Build and Run C++ tests
+        run: |
+          cd $GITHUB_WORKSPACE  # Navigate back to the root directory of your repository
+          g++ -o test_executable example/test_gen_code.cpp -IUnity/src Unity/src/unity.c
+          ./test_executable
 
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v2
         with:
           name: coverage-report
-          path: .coverage  # Adjust the path to your coverage report file
+          path: .coverage
