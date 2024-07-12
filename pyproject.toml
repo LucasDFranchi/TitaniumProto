@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "Titanium Proto"
-version = "0.2.0"
+name = "titanium-proto"
+version = "0.2.1"
 description = ""
 authors = ["Lucas D. Franchi <LucasD.Franchi@gmail.com>"]
 
@@ -18,7 +18,7 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-titanium-proto = 'titanium-proto.titanium-proto:main'
+titanium-proto = 'titanium_proto.titanium_proto:main'
 
 [tool.coverage.run]
 branch = true
@@ -30,3 +30,6 @@ skip_covered = true
 
 [tool.pytest.ini_options]
 addopts = "--cov=titanium_proto/ --cov-report=term-missing"
+
+[tool.hatch.build.targets.wheel.force-include]
+"examples" = "titanium_proto/templates/protobuf_template.jinja2"
