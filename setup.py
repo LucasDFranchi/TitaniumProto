@@ -2,11 +2,15 @@ from setuptools import setup, find_packages
 
 setup(
     name="titanium-proto",
-    version="0.2.0",
+    version="0.2.1",
     description="A Python library to generate C++ classes from JSON for working with structs.",
     author="Lucas D. Franchi",
     author_email="LucasD.Franchi@gmail.com",
     packages=find_packages(),
+    package_data={
+        'titanium-proto': ['titanium_proto/templates/*.jinja2'],
+    },
+    include_package_data=True,
     python_requires=">=3.7",
     entry_points={
         'console_scripts': [
