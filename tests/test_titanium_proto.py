@@ -92,7 +92,7 @@ def test_parse_fields_invalid_type():
 def test_generate_header_file(temp_dir):   
     tp = TitaniumFileGenerator()
     tp.import_and_parse_proto_file("./tests/resources/test.json")
-    tp.generate_header_file(f"{temp_dir}/")
+    tp.generate_header_file(f"{temp_dir}/", True)
     
     with open(f"{temp_dir}/TestProto.h", 'r') as generated_cpp_file:
         generated_cpp_content = generated_cpp_file.read()

@@ -1,6 +1,6 @@
 {
   "syntax": "titanium1",
-  "package": "Message",
+  "package": "Test",
   "fields": [
     {
       "type": "uint64_t",

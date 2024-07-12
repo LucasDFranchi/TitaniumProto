@@ -44,7 +44,7 @@ jobs:
       - name: Build and Run C++ tests
         run: |
           cd $GITHUB_WORKSPACE  # Navigate back to the root directory of your repository
-          poetry run python3 -m titanium_proto.titanium_proto -fp ./tests/cpp/test.json -o ./tests/cpp/
+          poetry run python3 -m titanium_proto.titanium_proto -fp ./tests/cpp/test.json -o ./tests/cpp/ --enable_json
           g++ -o test_executable tests/cpp/test_gen_code.cpp -IUnity/src -I./ Unity/src/unity.c 
           ./test_executable
 

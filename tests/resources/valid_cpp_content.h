@@ -10,6 +10,20 @@
 #include "string.h"
 #include "jsmn.h"
 
+#ifndef PROTOBUFS_ERRORS_H
+#define PROTOBUFS_ERRORS_H
+
+enum protobufs_errors {
+  PROTO_NO_ERROR   = 0,
+  PROTO_INVAL_PTR  = -1,
+  PROTO_OVERFLOW   = -2,
+  PROTO_INVAL_SIZE = -3,
+  PROTO_INVAL_NUM_TOKEN = -4,
+  PROTO_INVAL_JSON_KEY = -5,
+};
+
+#endif // PROTOBUFS_ERRORS_H
+
 class TestProtobuf {
 public:
     TestProtobuf() = default;
@@ -35,52 +49,52 @@ public:
 
     int8_t UpdateTimestamp(uint64_t value) {
         this->_timestamp = value;
-        return 0;
+        return PROTO_NO_ERROR;
     }
 
     int8_t UpdateBuffer(const char* value) {
         if (value == nullptr) {
-            return -1;
+            return PROTO_INVAL_PTR;
         }
 
         size_t value_length = strlen(value) + 1;
 
         if ((value_length == 0) || BUFFER_SIZE == 0) {
-            return -2;
+            return PROTO_OVERFLOW;
         }
 
         if (value_length > BUFFER_SIZE) {
-            return -3;
+            return PROTO_INVAL_SIZE;
         }
 
         memset(this->_buffer, 0, BUFFER_SIZE);
         memcpy(this->_buffer, value, value_length);
 
-        return 0;
+        return PROTO_NO_ERROR;
     }
 
     int8_t UpdateBuffer(const char* value, uint16_t string_size) {
         if (value == nullptr) {
-            return -1;
+            return PROTO_INVAL_PTR;
         }
 
         if (BUFFER_SIZE == 0) {
-            return -2;
+            return PROTO_OVERFLOW;
         }
 
         if (string_size > BUFFER_SIZE) {
-            return -3;
+            return PROTO_INVAL_SIZE;
         }
 
         memset(this->_buffer, 0, BUFFER_SIZE);
         memcpy(this->_buffer, value, string_size);
 
-        return 0;
+        return PROTO_NO_ERROR;
     }
 
     int8_t UpdateId(int32_t value) {
         this->_id = value;
-        return 0;
+        return PROTO_NO_ERROR;
     }
 
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
@@ -107,14 +121,14 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         if (in_buffer == nullptr) {
-            return -1;
+            return PROTO_INVAL_PTR;
         }
 
         uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_id) + 1;
         uint16_t deserialized_max_size = sizeof(this->_timestamp) + sizeof(this->_buffer) + sizeof(this->_id);
 
         if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
-            return -3;
+            return PROTO_INVAL_SIZE;
         }
 
         memset(this->_buffer, 0, BUFFER_SIZE);
@@ -126,9 +140,8 @@ public:
         offset += strlen(&in_buffer[offset]) + 1;
         memcpy(&this->_id, &in_buffer[offset], sizeof(this->_id));
 
-        return 0;
+        return PROTO_NO_ERROR;
     }
-
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 
@@ -154,7 +167,7 @@ public:
     }
 
     int8_t DeSerializeJson(const char* in_buffer, uint16_t in_buffer_size) {
-        auto result = -1;
+        auto result = PROTO_NO_ERROR;
         jsmn_parser parser;
         jsmntok_t tokens[this->_NUM_TOKENS];
 
@@ -162,12 +175,14 @@ public:
 
         do {
             if (in_buffer == nullptr) {
+                result = PROTO_INVAL_PTR;
                 break;
             }
 
             auto num_tokens = jsmn_parse(&parser, in_buffer, strlen(in_buffer), tokens, this->_NUM_TOKENS);
 
             if (num_tokens != this->_NUM_TOKENS) {
+                result = PROTO_INVAL_NUM_TOKEN;
                 break;
             }
 
@@ -180,6 +195,7 @@ public:
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->_TIMESTAMP_TOKEN_NAME, token_length) != 0) {
+                result = PROTO_INVAL_JSON_KEY;
                 break;
             }
 
@@ -190,6 +206,7 @@ public:
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->_BUFFER_TOKEN_NAME, token_length) != 0) {
+                result = PROTO_INVAL_JSON_KEY;
                 break;
             }
 
@@ -200,12 +217,13 @@ public:
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->_ID_TOKEN_NAME, token_length) != 0) {
+                result = PROTO_INVAL_JSON_KEY;
                 break;
             }
 
             this->UpdateId(atoi(in_buffer + value.start));
 
-            result = 0;
+            result = PROTO_NO_ERROR;
 
         } while(0);
 
@@ -216,8 +234,6 @@ private:
     uint64_t _timestamp = 0;
     char _buffer[128] = {0};
     int32_t _id = 0;
-
-
     const char* _json_string = R"({
     "timestamp": %llu,
     "buffer": "%s",
@@ -231,5 +247,4 @@ private:
     const uint8_t _ID_TOKEN_ID = 5;
     const uint8_t _NUM_TOKENS  = 7;
 };
-
 #endif /* TEST_PROTO_H */

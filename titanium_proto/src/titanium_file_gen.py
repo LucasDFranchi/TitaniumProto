@@ -1,6 +1,6 @@
 import json
 
-from jinja2 import Environment, Template
+from jinja2 import Template
 
 from .titanium_field import TitaniumField
 
@@ -14,7 +14,25 @@ template_string = """/**
 
 #include "stdint.h"
 #include "string.h"
+{%- if proto.json_enable %}
 #include "jsmn.h"
+{%- endif %}
+
+#ifndef PROTOBUFS_ERRORS_H
+#define PROTOBUFS_ERRORS_H
+
+enum protobufs_errors {
+  PROTO_NO_ERROR   = 0,
+  PROTO_INVAL_PTR  = -1,
+  PROTO_OVERFLOW   = -2,
+  PROTO_INVAL_SIZE = -3,
+{%- if proto.json_enable %}
+  PROTO_INVAL_NUM_TOKEN = -4,
+  PROTO_INVAL_JSON_KEY = -5,
+{%- endif %}
+};
+
+#endif // PROTOBUFS_ERRORS_H
 
 class {{ package_name }}Protobuf {
 public:
@@ -48,47 +66,47 @@ public:
 {%- if field.is_array %}
     int8_t Update{{ field.capitalized_name }}(const {{ field.c_type_name }}* value) {
         if (value == nullptr) {
-            return -1;
+            return PROTO_INVAL_PTR;
         }
 
         size_t value_length = strlen(value) + 1;
 
         if ((value_length == 0) || {{ field.defined_size }} == 0) {
-            return -2;
+            return PROTO_OVERFLOW;
         }
 
         if (value_length > {{ field.defined_size }}) {
-            return -3;
+            return PROTO_INVAL_SIZE;
         }
 
         memset(this->{{ field.internal_name }}, 0, {{ field.defined_size }});
         memcpy(this->{{ field.internal_name }}, value, value_length);
 
-        return 0;
+        return PROTO_NO_ERROR;
     }
 
     int8_t Update{{ field.capitalized_name }}(const {{ field.c_type_name }}* value, uint16_t string_size) {
         if (value == nullptr) {
-            return -1;
+            return PROTO_INVAL_PTR;
         }
 
         if ({{ field.defined_size }} == 0) {
-            return -2;
+            return PROTO_OVERFLOW;
         }
 
         if (string_size > {{ field.defined_size }}) {
-            return -3;
+            return PROTO_INVAL_SIZE;
         }
 
         memset(this->{{ field.internal_name }}, 0, {{ field.defined_size }});
         memcpy(this->{{ field.internal_name }}, value, string_size);
 
-        return 0;
+        return PROTO_NO_ERROR;
     }
 {% else %}
     int8_t Update{{ field.capitalized_name }}({{  field.c_type_name }} value) {
         this->{{ field.internal_name }} = value;
-        return 0;
+        return PROTO_NO_ERROR;
     }
 {% endif -%}
 {% endfor %}
@@ -123,14 +141,14 @@ public:
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
         if (in_buffer == nullptr) {
-            return -1;
+            return PROTO_INVAL_PTR;
         }
 
         uint16_t deserialized_min_size = {{ proto.minimum_size }};
         uint16_t deserialized_max_size = {{ proto.maximum_size }};
 
         if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
-            return -3;
+            return PROTO_INVAL_SIZE;
         }
 {% for field in fields -%}
 {%- if field.is_array %}
@@ -154,9 +172,9 @@ public:
 {%- endif %}
 {%- endfor %}
 
-        return 0;
+        return PROTO_NO_ERROR;
     }
-
+{%- if proto.json_enable %}
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 
@@ -182,7 +200,7 @@ public:
     }
 
     int8_t DeSerializeJson(const char* in_buffer, uint16_t in_buffer_size) {
-        auto result = -1;
+        auto result = PROTO_NO_ERROR;
         jsmn_parser parser;
         jsmntok_t tokens[this->_NUM_TOKENS];
 
@@ -190,12 +208,14 @@ public:
 
         do {
             if (in_buffer == nullptr) {
+                result = PROTO_INVAL_PTR;
                 break;
             }
 
             auto num_tokens = jsmn_parse(&parser, in_buffer, strlen(in_buffer), tokens, this->_NUM_TOKENS);
 
             if (num_tokens != this->_NUM_TOKENS) {
+                result = PROTO_INVAL_NUM_TOKEN;
                 break;
             }
 
@@ -210,6 +230,7 @@ public:
             token_length = key.end - key.start;
 
             if (strncmp(in_buffer + key.start, this->{{ field.internal_name | upper }}_TOKEN_NAME, token_length) != 0) {
+                result = PROTO_INVAL_JSON_KEY;
                 break;
             }
 {%- if field.is_array %}
@@ -221,19 +242,20 @@ public:
 {%- endif %}
 {%- endfor %}
 
-            result = 0;
+            result = PROTO_NO_ERROR;
 
         } while(0);
 
         return result;
     }
+{%- endif %}
 
 private:
 {%- for field in fields %}
     {{ field.c_type_name }} {{ field.internal_name }}{% if field.is_array %}[{{ field.size }}] = {0}{%- else %} = 0{% endif %};
 {%- endfor %}
 
-
+{%- if proto.json_enable %}
     const char* _json_string = R"({
 {%- for field in fields %}
     "{{ field.token_name }}": {{ field.format_specifier }}{% if not loop.last -%},{% endif -%}
@@ -246,8 +268,9 @@ private:
 {%- endfor %}
     const uint8_t _NUM_TOKENS  = {{ proto.num_tokens }};
 };
-
+{%- endif %}
 #endif /* {{ package_name | upper }}_PROTO_H */
+
 """
 
 class TitaniumFileGenerator:
@@ -273,14 +296,7 @@ class TitaniumFileGenerator:
         self._package_name = None
         self._fields = []
 
-                # Create a Jinja2 Template object
         self._template = Template(template_string)
-
-        # # Render the template with the data and print or save to a file
-        # rendered_content = template.render(template_data)
-
-        # env = Environment(loader=FileSystemLoader("./titanium_proto/templates"))
-        # self._template = env.get_template("protobuf_template.jinja2")
 
     def _read_file(self, filepath: str):
         """
@@ -350,7 +366,7 @@ class TitaniumFileGenerator:
         self._update_package_name()
         self._parse_fields()
         
-    def generate_header_file(self, redirect_outfile: str = ""):
+    def generate_header_file(self, redirect_outfile: str = "", enable_json: bool = False):
         data = {}
         serialized_size_list = []
         maximum_size_list = []
@@ -380,6 +396,7 @@ class TitaniumFileGenerator:
         data["proto"]["minimum_size"] = " + ".join(minimum_size_list) + f" + {num_of_arrays}"
         data["proto"]["static_maximum_size"] = " + ".join(static_maximum_size_list)
         data["proto"]["num_tokens"] = (len(self._fields) * 2) + 1
+        data["proto"]["json_enable"] = enable_json
         
         rendered_code = self._template.render(data)
         
