@@ -15,26 +15,11 @@ template_string = """/**
 #include "stdint.h"
 #include "string.h"
 {%- if proto.json_enable %}
-#include "jsmn.h"
+#include "{{ proto.jsmn_path }}jsmn.h"
 {%- endif %}
+#include "IProtobuf.h"
 
-#ifndef PROTOBUFS_ERRORS_H
-#define PROTOBUFS_ERRORS_H
-
-enum protobufs_errors {
-  PROTO_NO_ERROR   = 0,
-  PROTO_INVAL_PTR  = -1,
-  PROTO_OVERFLOW   = -2,
-  PROTO_INVAL_SIZE = -3,
-{%- if proto.json_enable %}
-  PROTO_INVAL_NUM_TOKEN = -4,
-  PROTO_INVAL_JSON_KEY = -5,
-{%- endif %}
-};
-
-#endif // PROTOBUFS_ERRORS_H
-
-class {{ package_name }}Protobuf {
+class {{ package_name }}Protobuf : public IProtobuf {
 public:
     {{ package_name }}Protobuf() = default;
     ~{{ package_name }}Protobuf() = default;
@@ -366,7 +351,7 @@ class TitaniumFileGenerator:
         self._update_package_name()
         self._parse_fields()
         
-    def generate_header_file(self, redirect_outfile: str = "", enable_json: bool = False):
+    def generate_header_file(self, redirect_outfile: str = "", enable_json: bool = False, jsmn_path: str = ""):
         data = {}
         serialized_size_list = []
         maximum_size_list = []
@@ -397,6 +382,7 @@ class TitaniumFileGenerator:
         data["proto"]["static_maximum_size"] = " + ".join(static_maximum_size_list)
         data["proto"]["num_tokens"] = (len(self._fields) * 2) + 1
         data["proto"]["json_enable"] = enable_json
+        data["proto"]["jsmn_path"] = jsmn_path
         
         rendered_code = self._template.render(data)
         
