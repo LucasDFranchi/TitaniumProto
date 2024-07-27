@@ -16,8 +16,15 @@ def handle_arguments():
     parser.add_argument(
         "--file_path", "-fp", 
         help="Path to the Titanium Protobuf file to be processed. Provide a single file path.",
-        required=True
+        required=False
     )
+    
+    parser.add_argument(
+        "--raw_data", "-r", 
+        help="Json as raw data",
+        required=False
+    )
+    
     parser.add_argument(
         "--output_path", "-o", 
         help="Directory path where the generated header file will be saved.",
@@ -44,7 +51,7 @@ def main():
     args = handle_arguments()
     tp = TitaniumFileGenerator()
     
-    tp.import_and_parse_proto_file(args.file_path)
+    tp.import_and_parse_proto_file(args.file_path, args.raw_data)
     tp.generate_header_file(args.output_path, args.enable_json, args.jsmn_path)
 
 

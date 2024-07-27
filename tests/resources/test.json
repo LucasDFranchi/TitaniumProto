@@ -3,17 +3,25 @@
   "package": "Test",
   "fields": [
     {
-      "type": "uint64_t",
-      "name": "timestamp"
+      "type": "uint8_t",
+      "name": "first_field"
+    },
+    {
+      "type": "uint32_t",
+      "name": "second_field"
+    },
+    {
+      "type": "uint16_t",
+      "name": "third_field"
     },
     {
       "type": "string",
-      "name": "buffer",
+      "name": "fourth_field",
       "maximum_size": 128
     },
     {
-      "type": "int32_t",
-      "name": "id"
+      "type": "int64_t",
+      "name": "five_field"
     }
   ]
 }

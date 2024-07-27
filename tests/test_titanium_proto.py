@@ -26,17 +26,6 @@ def test_read_file():
         mock_file.assert_called_with("dummy_path", "r")
         assert tp._content == json.loads(mock_data)
 
-def test_validate_syntax_valid():
-    tp = TitaniumFileGenerator()
-    tp._content = {"syntax": "titanium1"}
-    tp._validate_syntax()
-
-def test_validate_syntax_invalid():
-    tp = TitaniumFileGenerator()
-    tp._content = {"syntax": "invalid_syntax"}
-    with pytest.raises(ValueError, match="Invalid syntax: protocol file must have 'syntax' set to 'titanium1'."):
-        tp._validate_syntax()
-
 def test_update_package_name():
     tp = TitaniumFileGenerator()
     tp._content = {"package": "testpkg"}

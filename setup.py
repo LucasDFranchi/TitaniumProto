@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="titanium-proto",
-    version="0.2.3",
+    version="0.2.5",
     description="A Python library to generate C++ classes from JSON for working with structs.",
     author="Lucas D. Franchi",
     author_email="LucasD.Franchi@gmail.com",

@@ -8,7 +8,7 @@
 
 #include "stdint.h"
 #include "string.h"
-#include "jsmn.h"
+#include "ArduinoJson-v6.21.5.h"
 #include "IProtobuf.h"
 
 class TestProtobuf : public IProtobuf {
@@ -16,119 +16,166 @@ public:
     TestProtobuf() = default;
     ~TestProtobuf() = default;
 
-    static constexpr uint16_t BUFFER_SIZE = 128;
+    static constexpr uint16_t FOURTH_FIELD_SIZE = 128;
 
-    uint64_t GetTimestamp(void) const { return this->_timestamp; }
-    const char* GetBuffer(void) const { return this->_buffer; }
-    int32_t GetId(void) const { return this->_id; }
+    uint8_t GetFirstField(void) const { return this->_first_field; }
+    uint32_t GetSecondField(void) const { return this->_second_field; }
+    uint16_t GetThirdField(void) const { return this->_third_field; }
+    const char* GetFourthField(void) const { return this->_fourth_field; }
+    int64_t GetFiveField(void) const { return this->_five_field; }
 
     int16_t GetSerializedSize(void) const {
-        return (sizeof(this->_timestamp) + (strlen(this->_buffer) + 1) + sizeof(this->_id));
+        return (sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + strlen(this->_fourth_field) + sizeof(this->_five_field) + 5);
     }
 
     int16_t GetMaxSize(void) const {
-        return (sizeof(this->_timestamp) + sizeof(this->_buffer) + sizeof(this->_id));
+        return (sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + sizeof(this->_fourth_field) + sizeof(this->_five_field));
     }
 
     static int16_t GetStaticMaxSize(void) {
-        return (sizeof(uint64_t) + BUFFER_SIZE + sizeof(int32_t));
+        return (sizeof(uint8_t) + sizeof(uint32_t) + sizeof(uint16_t) + FOURTH_FIELD_SIZE + sizeof(int64_t));
     }
 
-    int8_t UpdateTimestamp(uint64_t value) {
-        this->_timestamp = value;
+    int8_t UpdateFirstField(uint8_t value) {
+        this->_first_field = value;
         return PROTO_NO_ERROR;
     }
 
-    int8_t UpdateBuffer(const char* value) {
+    int8_t UpdateSecondField(uint32_t value) {
+        this->_second_field = value;
+        return PROTO_NO_ERROR;
+    }
+
+    int8_t UpdateThirdField(uint16_t value) {
+        this->_third_field = value;
+        return PROTO_NO_ERROR;
+    }
+
+    int8_t UpdateFourthField(const char* value) {
         if (value == nullptr) {
             return PROTO_INVAL_PTR;
         }
 
         size_t value_length = strlen(value) + 1;
 
-        if ((value_length == 0) || BUFFER_SIZE == 0) {
+        if ((value_length == 1) || FOURTH_FIELD_SIZE == 0) {
             return PROTO_OVERFLOW;
         }
 
-        if (value_length > BUFFER_SIZE) {
+        if (value_length > FOURTH_FIELD_SIZE) {
             return PROTO_INVAL_SIZE;
         }
 
-        memset(this->_buffer, 0, BUFFER_SIZE);
-        memcpy(this->_buffer, value, value_length);
+        memset(this->_fourth_field, 0, FOURTH_FIELD_SIZE);
+        memcpy(this->_fourth_field, value, value_length);
 
         return PROTO_NO_ERROR;
     }
 
-    int8_t UpdateBuffer(const char* value, uint16_t string_size) {
+    int8_t UpdateFourthField(const char* value, uint16_t string_size) {
         if (value == nullptr) {
             return PROTO_INVAL_PTR;
         }
 
-        if (BUFFER_SIZE == 0) {
+        if (FOURTH_FIELD_SIZE == 0) {
             return PROTO_OVERFLOW;
         }
 
-        if (string_size > BUFFER_SIZE) {
+        if (string_size > FOURTH_FIELD_SIZE) {
             return PROTO_INVAL_SIZE;
         }
 
-        memset(this->_buffer, 0, BUFFER_SIZE);
-        memcpy(this->_buffer, value, string_size);
+        memset(this->_fourth_field, 0, FOURTH_FIELD_SIZE);
+        memcpy(this->_fourth_field, value, string_size);
 
         return PROTO_NO_ERROR;
     }
 
-    int8_t UpdateId(int32_t value) {
-        this->_id = value;
+    int8_t UpdateFiveField(int64_t value) {
+        this->_five_field = value;
         return PROTO_NO_ERROR;
     }
 
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
+        uint16_t data_position = 0;
         if (out_buffer == nullptr) {
             return 0;
         }
 
-        uint16_t serialized_size = sizeof(this->_timestamp) + (strlen(this->_buffer) + 1) + sizeof(this->_id);
+        uint16_t serialized_size = sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + strlen(this->_fourth_field) + sizeof(this->_five_field) + 5;
 
         if (out_buffer_size < serialized_size) {
             return 0;
-        }
+        }  
 
-        uint16_t offset = 0;
+        out_buffer[data_position++] = sizeof(this->_first_field);
+        memcpy(&out_buffer[data_position], &this->_first_field, sizeof(this->_first_field));
+        data_position += sizeof(this->_first_field);
 
-        memcpy(&out_buffer[offset], &this->_timestamp, sizeof(this->_timestamp));
-        offset += sizeof(this->_timestamp);
-        memcpy(&out_buffer[offset], this->_buffer, strlen(this->_buffer) + 1);
-        offset += strlen(this->_buffer) + 1;
-        memcpy(&out_buffer[offset], &this->_id, sizeof(this->_id));
+        out_buffer[data_position++] = sizeof(this->_second_field);
+        memcpy(&out_buffer[data_position], &this->_second_field, sizeof(this->_second_field));
+        data_position += sizeof(this->_second_field);
+
+        out_buffer[data_position++] = sizeof(this->_third_field);
+        memcpy(&out_buffer[data_position], &this->_third_field, sizeof(this->_third_field));
+        data_position += sizeof(this->_third_field);
+
+        uint8_t length = strlen(this->_fourth_field);
+        out_buffer[data_position++] = length;
+        memcpy(&out_buffer[data_position], this->_fourth_field, length);
+        data_position += length;
+
+        out_buffer[data_position++] = sizeof(this->_five_field);
+        memcpy(&out_buffer[data_position], &this->_five_field, sizeof(this->_five_field));
+        data_position += sizeof(this->_five_field);
 
         return serialized_size;
     }
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
+        uint16_t data_position = 0;
+        uint8_t size = 0;
+                
         if (in_buffer == nullptr) {
             return PROTO_INVAL_PTR;
         }
 
-        uint16_t deserialized_min_size = sizeof(this->_timestamp) + sizeof(this->_id) + 1;
-        uint16_t deserialized_max_size = sizeof(this->_timestamp) + sizeof(this->_buffer) + sizeof(this->_id);
+        uint16_t deserialized_min_size = sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + sizeof(this->_five_field) + 1;
 
-        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
+        if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
 
-        memset(this->_buffer, 0, BUFFER_SIZE);
+        memset(this->_fourth_field, 0, FOURTH_FIELD_SIZE);
 
-        uint16_t offset = 0;
-        memcpy(&this->_timestamp, &in_buffer[offset], sizeof(this->_timestamp));
-        offset += sizeof(this->_timestamp);
-        memcpy(this->_buffer, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
-        offset += strlen(&in_buffer[offset]) + 1;
-        memcpy(&this->_id, &in_buffer[offset], sizeof(this->_id));
-
+        size = in_buffer[data_position++];
+        if (size + data_position > in_buffer_size) return 0;
+        memcpy(&this->_first_field, &in_buffer[data_position], size);
+        data_position += size;
+    
+        size = in_buffer[data_position++];
+        if (size + data_position > in_buffer_size) return 0;
+        memcpy(&this->_second_field, &in_buffer[data_position], size);
+        data_position += size;
+    
+        size = in_buffer[data_position++];
+        if (size + data_position > in_buffer_size) return 0;
+        memcpy(&this->_third_field, &in_buffer[data_position], size);
+        data_position += size;
+    
+        uint8_t length = in_buffer[data_position++];
+        if (length + data_position > in_buffer_size) return 0;
+        memcpy(this->_fourth_field, &in_buffer[data_position], length);
+        this->_fourth_field[length] = '\0';
+        data_position += length;
+        size = in_buffer[data_position++];
+        if (size + data_position > in_buffer_size) return 0;
+        memcpy(&this->_five_field, &in_buffer[data_position], size);
+        data_position += size;
+    
         return PROTO_NO_ERROR;
     }
+
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 
@@ -137,17 +184,13 @@ public:
                 break;
             }
 
-            uint16_t serialized_size = sizeof(this->_timestamp) + (strlen(this->_buffer) + 1) + sizeof(this->_id);
-
-            if (out_buffer_size < serialized_size) {
-                return 0;
-            }
-
-            response_length = snprintf(out_buffer, out_buffer_size,
-                                       this->_json_string,
-                                       this->_timestamp,
-                                       this->_buffer,
-                                       this->_id);
+            StaticJsonDocument<512> doc;         
+            doc["first_field"] = this->_first_field;         
+            doc["second_field"] = this->_second_field;         
+            doc["third_field"] = this->_third_field;         
+            doc["fourth_field"] = this->_fourth_field;         
+            doc["five_field"] = this->_five_field;
+            response_length = serializeJson(doc, out_buffer, out_buffer_size);
         } while (0);
 
         return response_length;
@@ -155,60 +198,59 @@ public:
 
     int8_t DeSerializeJson(const char* in_buffer, uint16_t in_buffer_size) {
         auto result = PROTO_NO_ERROR;
-        jsmn_parser parser;
-        jsmntok_t tokens[this->_NUM_TOKENS];
-
-        jsmn_init(&parser);
 
         do {
             if (in_buffer == nullptr) {
                 result = PROTO_INVAL_PTR;
                 break;
             }
-
-            auto num_tokens = jsmn_parse(&parser, in_buffer, strlen(in_buffer), tokens, this->_NUM_TOKENS);
-
-            if (num_tokens != this->_NUM_TOKENS) {
-                result = PROTO_INVAL_NUM_TOKEN;
+            
+            StaticJsonDocument<512> doc;
+            
+            if (deserializeJson(doc, in_buffer)) {
+                result = PROTO_INVAL_JSON_PARSE;
                 break;
             }
-
-            jsmntok_t key{};
-            jsmntok_t value{};
-            uint16_t token_length = 0;
-
-            key   = tokens[this->_TIMESTAMP_TOKEN_ID];
-            value = tokens[this->_TIMESTAMP_TOKEN_ID + 1];
-            token_length = key.end - key.start;
-
-            if (strncmp(in_buffer + key.start, this->_TIMESTAMP_TOKEN_NAME, token_length) != 0) {
+            if (!doc.containsKey("first_field")) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
-
-            this->UpdateTimestamp(atoi(in_buffer + value.start));
-
-            key   = tokens[this->_BUFFER_TOKEN_ID];
-            value = tokens[this->_BUFFER_TOKEN_ID + 1];
-            token_length = key.end - key.start;
-
-            if (strncmp(in_buffer + key.start, this->_BUFFER_TOKEN_NAME, token_length) != 0) {
+            if (!doc.containsKey("second_field")) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
-
-            this->UpdateBuffer(in_buffer + value.start, value.end - value.start);
-
-            key   = tokens[this->_ID_TOKEN_ID];
-            value = tokens[this->_ID_TOKEN_ID + 1];
-            token_length = key.end - key.start;
-
-            if (strncmp(in_buffer + key.start, this->_ID_TOKEN_NAME, token_length) != 0) {
+            if (!doc.containsKey("third_field")) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
-
-            this->UpdateId(atoi(in_buffer + value.start));
+            if (!doc.containsKey("fourth_field")) {
+                result = PROTO_INVAL_JSON_KEY;
+                break;
+            }
+            if (!doc.containsKey("five_field")) {
+                result = PROTO_INVAL_JSON_KEY;
+                break;
+            }
+            if (this->UpdateFirstField(doc["first_field"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
+            if (this->UpdateSecondField(doc["second_field"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
+            if (this->UpdateThirdField(doc["third_field"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
+            if (this->UpdateFourthField(doc["fourth_field"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
+            if (this->UpdateFiveField(doc["five_field"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
 
             result = PROTO_NO_ERROR;
 
@@ -218,20 +260,28 @@ public:
     }
 
 private:
-    uint64_t _timestamp = 0;
-    char _buffer[128] = {0};
-    int32_t _id = 0;
+    uint8_t _first_field = 0;
+    uint32_t _second_field = 0;
+    uint16_t _third_field = 0;
+    char _fourth_field[128] = {0};
+    int64_t _five_field = 0;
     const char* _json_string = R"({
-    "timestamp": %llu,
-    "buffer": "%s",
-    "id": %d
+    "first_field": %u,
+    "second_field": %u,
+    "third_field": %u,
+    "fourth_field": "%s",
+    "five_field": %lld
 })";  
-    const char* _TIMESTAMP_TOKEN_NAME = "timestamp";
-    const uint8_t _TIMESTAMP_TOKEN_ID = 1;  
-    const char* _BUFFER_TOKEN_NAME = "buffer";
-    const uint8_t _BUFFER_TOKEN_ID = 3;  
-    const char* _ID_TOKEN_NAME = "id";
-    const uint8_t _ID_TOKEN_ID = 5;
-    const uint8_t _NUM_TOKENS  = 7;
+    const char* _FIRST_FIELD_TOKEN_NAME = "first_field";
+    const uint8_t _FIRST_FIELD_TOKEN_ID = 1;  
+    const char* _SECOND_FIELD_TOKEN_NAME = "second_field";
+    const uint8_t _SECOND_FIELD_TOKEN_ID = 3;  
+    const char* _THIRD_FIELD_TOKEN_NAME = "third_field";
+    const uint8_t _THIRD_FIELD_TOKEN_ID = 5;  
+    const char* _FOURTH_FIELD_TOKEN_NAME = "fourth_field";
+    const uint8_t _FOURTH_FIELD_TOKEN_ID = 7;  
+    const char* _FIVE_FIELD_TOKEN_NAME = "five_field";
+    const uint8_t _FIVE_FIELD_TOKEN_ID = 9;
+    const uint8_t _NUM_TOKENS  = 11;
 };
 #endif /* TEST_PROTO_H */

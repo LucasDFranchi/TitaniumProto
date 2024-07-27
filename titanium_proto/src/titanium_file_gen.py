@@ -15,7 +15,7 @@ template_string = """/**
 #include "stdint.h"
 #include "string.h"
 {%- if proto.json_enable %}
-#include "{{ proto.jsmn_path }}jsmn.h"
+#include "ArduinoJson.h"
 {%- endif %}
 #include "IProtobuf.h"
 
@@ -56,7 +56,7 @@ public:
 
         size_t value_length = strlen(value) + 1;
 
-        if ((value_length == 0) || {{ field.defined_size }} == 0) {
+        if ((value_length == 1) || {{ field.defined_size }} == 0) {
             return PROTO_OVERFLOW;
         }
 
@@ -96,6 +96,7 @@ public:
 {% endif -%}
 {% endfor %}
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
+        uint16_t data_position = 0;
         if (out_buffer == nullptr) {
             return 0;
         }
@@ -104,62 +105,57 @@ public:
 
         if (out_buffer_size < serialized_size) {
             return 0;
-        }
-
-        uint16_t offset = 0;
+        }  
 {% for field in fields -%}
-{%- if field.is_array %}
-        memcpy(&out_buffer[offset], this->{{ field.internal_name }}, strlen(this->{{ field.internal_name }}) + 1);
-{%- if not loop.last %}
-        offset += strlen(this->{{ field.internal_name }}) + 1;
-{%- endif %}
-{%- else %}
-        memcpy(&out_buffer[offset], &this->{{ field.internal_name }}, sizeof(this->{{ field.internal_name }}));
-{%- if not loop.last %}
-        offset += sizeof(this->{{ field.internal_name }});
-{%- endif %}
-{%- endif %}
-{%- endfor %}
-
+    {%- if field.c_type_name in ['uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t', 'int64_t'] %}
+        out_buffer[data_position++] = sizeof(this->{{ field.internal_name }});
+        memcpy(&out_buffer[data_position], &this->{{ field.internal_name }}, sizeof(this->{{ field.internal_name }}));
+        data_position += sizeof(this->{{ field.internal_name }});
+    {%- elif field.c_type_name == 'char' %}
+        uint8_t length = strlen(this->{{ field.internal_name }});
+        out_buffer[data_position++] = length;
+        memcpy(&out_buffer[data_position], this->{{ field.internal_name }}, length);
+        data_position += length;
+    {%- endif %}
+{% endfor %}
         return serialized_size;
     }
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
+        uint16_t data_position = 0;
+        uint8_t size = 0;
+                
         if (in_buffer == nullptr) {
             return PROTO_INVAL_PTR;
         }
 
         uint16_t deserialized_min_size = {{ proto.minimum_size }};
-        uint16_t deserialized_max_size = {{ proto.maximum_size }};
 
-        if ((in_buffer_size < deserialized_min_size) || (in_buffer_size > deserialized_max_size)) {
+        if (in_buffer_size < deserialized_min_size) {
             return PROTO_INVAL_SIZE;
         }
 {% for field in fields -%}
 {%- if field.is_array %}
         memset(this->{{ field.internal_name }}, 0, {{ field.defined_size }});
-{%- endif %}
+{%- endif -%}
 {%- endfor %}
-
-        uint16_t offset = 0;
-
-{%- for field in fields %}
-{%- if field.is_array %}
-        memcpy(this->{{ field.internal_name }}, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
-{%- if not loop.last %}
-        offset += strlen(&in_buffer[offset]) + 1;
-{%- endif %}
-{%- else %}
-        memcpy(&this->{{ field.internal_name }}, &in_buffer[offset], sizeof(this->{{ field.internal_name }}));
-{%- if not loop.last %}
-        offset += sizeof(this->{{ field.internal_name }});
-{%- endif %}
-{%- endif %}
+{% for field in fields -%}
+    {% if field.c_type_name in ['uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t', 'int64_t', ] %}
+        size = in_buffer[data_position++];
+        if (size + data_position > in_buffer_size) return 0;
+        memcpy(&this->{{ field.internal_name }}, &in_buffer[data_position], size);
+        data_position += size;
+    {% elif field.c_type_name == 'char' %}
+        uint8_t length = in_buffer[data_position++];
+        if (length + data_position > in_buffer_size) return 0;
+        memcpy(this->{{ field.internal_name }}, &in_buffer[data_position], length);
+        this->{{ field.internal_name }}[length] = '\\0';
+        data_position += length;
+    {%- endif %}
 {%- endfor %}
-
         return PROTO_NO_ERROR;
     }
-{%- if proto.json_enable %}
+{% if proto.json_enable %}
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {
         uint32_t response_length = 0;
 
@@ -168,17 +164,11 @@ public:
                 break;
             }
 
-            uint16_t serialized_size = {{ proto.serialized_size }};
-
-            if (out_buffer_size < serialized_size) {
-                return 0;
-            }
-
-            response_length = snprintf(out_buffer, out_buffer_size,
-                                       this->_json_string,
-{%- for field in fields %}
-                                       this->{{ field.internal_name }}{% if not loop.last -%},{%- else %});{% endif -%}
+            StaticJsonDocument<256> doc;
+{%- for field in fields %}         
+            doc["{{ field.token_name }}"] = this->{{ field.internal_name }};
 {%- endfor %}
+            response_length = serializeJson(doc, out_buffer, out_buffer_size);
         } while (0);
 
         return response_length;
@@ -186,45 +176,30 @@ public:
 
     int8_t DeSerializeJson(const char* in_buffer, uint16_t in_buffer_size) {
         auto result = PROTO_NO_ERROR;
-        jsmn_parser parser;
-        jsmntok_t tokens[this->_NUM_TOKENS];
-
-        jsmn_init(&parser);
 
         do {
             if (in_buffer == nullptr) {
                 result = PROTO_INVAL_PTR;
                 break;
             }
-
-            auto num_tokens = jsmn_parse(&parser, in_buffer, strlen(in_buffer), tokens, this->_NUM_TOKENS);
-
-            if (num_tokens != this->_NUM_TOKENS) {
-                result = PROTO_INVAL_NUM_TOKEN;
+            
+            StaticJsonDocument<256> doc;
+            
+            if (deserializeJson(doc, in_buffer)) {
+                result = PROTO_INVAL_JSON_PARSE;
                 break;
             }
-
-            jsmntok_t key{};
-            jsmntok_t value{};
-            uint16_t token_length = 0;
-
 {%- for field in fields %}
-
-            key   = tokens[this->{{ field.internal_name  | upper }}_TOKEN_ID];
-            value = tokens[this->{{ field.internal_name  | upper }}_TOKEN_ID + 1];
-            token_length = key.end - key.start;
-
-            if (strncmp(in_buffer + key.start, this->{{ field.internal_name | upper }}_TOKEN_NAME, token_length) != 0) {
+            if (!doc.containsKey("{{ field.token_name }}")) {
                 result = PROTO_INVAL_JSON_KEY;
                 break;
             }
-{%- if field.is_array %}
-
-            this->Update{{ field.capitalized_name }}(in_buffer + value.start, value.end - value.start);
-{%- else %}
-
-            this->Update{{ field.capitalized_name }}(atoi(in_buffer + value.start));
-{%- endif %}
+{%- endfor %}
+{%- for field in fields %}
+            if (this->Update{{ field.capitalized_name }}(doc["{{ field.token_name }}"])) {
+                result = PROTO_INVAL_JSON_VALUE;
+                break;
+            }
 {%- endfor %}
 
             result = PROTO_NO_ERROR;
@@ -293,18 +268,6 @@ class TitaniumFileGenerator:
         with open(filepath, "r") as file:
             self._content = json.load(file)
 
-    def _validate_syntax(self):
-        """
-        Validates the syntax of the protocol file.
-
-        Raises:
-            ValueError: If the syntax is not "titanium1".
-        """
-        if self._content.get("syntax") != "titanium1":
-            raise ValueError(
-                "Invalid syntax: protocol file must have 'syntax' set to 'titanium1'."
-            )
-
     def _update_package_name(self):
         """
         Updates the package name by parsing the protocol file content.
@@ -336,7 +299,7 @@ class TitaniumFileGenerator:
             self._fields.append(TitaniumField(field))
             token_id += 2
 
-    def import_and_parse_proto_file(self, filepath: str):
+    def import_and_parse_proto_file(self, filepath: str = None, raw_data: str = None):
         """
         Imports and parses definitions from a Titanium protobuf file.
 
@@ -346,8 +309,11 @@ class TitaniumFileGenerator:
         Raises:
             ValueError: If there are syntax errors in the protobuf file or required fields are missing.
         """
-        self._read_file(filepath)
-        self._validate_syntax()
+        if filepath:
+            self._read_file(filepath)
+        else:
+            self._content = raw_data
+
         self._update_package_name()
         self._parse_fields()
         
@@ -365,7 +331,7 @@ class TitaniumFileGenerator:
             data["fields"].append(field.to_dict())
             
             if field.is_array:
-                serialized_size_list.append(f"(strlen(this->{field.internal_name}) + 1)")
+                serialized_size_list.append(f"strlen(this->{field.internal_name})")
                 static_maximum_size_list.append(f"{field.defined_size}")
                 num_of_arrays += 1
             else:
@@ -376,13 +342,14 @@ class TitaniumFileGenerator:
             maximum_size_list.append(f"sizeof(this->{field.internal_name})")
 
         data["proto"] = {}            
-        data["proto"]["serialized_size"] =  " + ".join(serialized_size_list)
+        data["proto"]["serialized_size"] =  " + ".join(serialized_size_list) + f" + {len(self._fields)}"
         data["proto"]["maximum_size"] = " + ".join(maximum_size_list)
         data["proto"]["minimum_size"] = " + ".join(minimum_size_list) + f" + {num_of_arrays}"
         data["proto"]["static_maximum_size"] = " + ".join(static_maximum_size_list)
         data["proto"]["num_tokens"] = (len(self._fields) * 2) + 1
         data["proto"]["json_enable"] = enable_json
         data["proto"]["jsmn_path"] = jsmn_path
+        data["proto"]["num_var"] = len(self._fields)
         
         rendered_code = self._template.render(data)
         
