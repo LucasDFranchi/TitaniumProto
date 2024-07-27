@@ -167,3 +167,7 @@ cython_debug/
 !tests/cpp/jsmn.h
 !example/jsmn.h
 !example/MessageProto.h
+!example/IProtobuf.h
+!tests/cpp/SafeConverter.h
+!tests/cpp/IProtobuf.h
+!cpp_dependencies/*
