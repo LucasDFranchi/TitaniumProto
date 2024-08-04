@@ -39,9 +39,6 @@ class TitaniumField:
         field_dict["defined_size"] = self.defined_size
         field_dict["size"] = self.size
         field_dict["token_name"] = self.token_name
-        field_dict["token_id"] = self._token_id
-        field_dict["format_specifier"] = self.format_specifier
-        field_dict["format_raw"] = self.format_specifier_raw
         
         return field_dict   
 
@@ -118,39 +115,25 @@ class TitaniumField:
             str: The defined size name.
         """
         return f"{self._variable_name.upper()}_SIZE" if self.is_array else None
-
-    @property
-    def format_specifier(self):
-        type_map = {
-            "uint8_t": "%u",
-            "int8_t": "%d",
-            "uint16_t": "%u",
-            "int16_t": "%d",
-            "uint32_t": "%u",
-            "int32_t": "%d",
-            "uint64_t": "%llu",
-            "int64_t": "%lld",
-            "float": "%f",
-            "double": "%lf",
-            "string": "\"%s\"",
-        }
-        
-        return type_map.get(self.type_name, None)
-        
-    @property
-    def format_specifier_raw(self):
-        type_map = {
-            "uint8_t": "%u",
-            "int8_t": "%d",
-            "uint16_t": "%u",
-            "int16_t": "%d",
-            "uint32_t": "%u",
-            "int32_t": "%d",
-            "uint64_t": "%llu",
-            "int64_t": "%lld",
-            "float": "%f",
-            "double": "%lf",
-            "string": "%s",
-        }
     
-        return type_map.get(self.type_name, None)
+    @property
+    def maximum_field_length(self):
+        type_ranges = {
+            "uint8_t": "255",
+            "uint16_t": "65535",
+            "uint32_t": "4294967295",
+            "uint64_t": "18446744073709551615",
+            "int8_t": "-127",
+            "int16_t": "-32767",
+            "int32_t": "-2147483647",
+            "int64_t": "-9223372036854775807",
+        }
+        
+        maximum_str = None
+        
+        if self._type_name == "string":
+            maximum_str = "-" * self._block_size
+        else:
+            maximum_str = type_ranges.get(self.c_type_name)
+
+        return maximum_str

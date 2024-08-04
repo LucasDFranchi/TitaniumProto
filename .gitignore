@@ -171,3 +171,4 @@ cython_debug/
 !tests/cpp/SafeConverter.h
 !tests/cpp/IProtobuf.h
 !cpp_dependencies/*
+test_executable

@@ -164,7 +164,7 @@ public:
                 break;
             }
 
-            StaticJsonDocument<512> doc;
+            StaticJsonDocument<{{ proto.json_size }}> doc;
 {%- for field in fields %}         
             doc["{{ field.token_name }}"] = this->{{ field.internal_name }};
 {%- endfor %}
@@ -183,7 +183,7 @@ public:
                 break;
             }
             
-            StaticJsonDocument<512> doc;
+            StaticJsonDocument<{{ proto.json_size }}> doc;
             
             if (deserializeJson(doc, in_buffer)) {
                 result = PROTO_INVAL_JSON_PARSE;
@@ -305,6 +305,7 @@ class TitaniumFileGenerator:
         
     def generate_header_file(self, redirect_outfile: str = "", enable_json: bool = False, jsmn_path: str = ""):
         data = {}
+        maximum_json_size = {}
         serialized_size_list = []
         maximum_size_list = []
         minimum_size_list = []
@@ -314,6 +315,8 @@ class TitaniumFileGenerator:
         data["package_name"] = self._package_name
         data["fields"] = []
         for field in self._fields:
+            # json_size += field.maximum_json_size
+            maximum_json_size[field.token_name] = field.maximum_field_length
             data["fields"].append(field.to_dict())
             
             if field.is_array:
@@ -336,6 +339,9 @@ class TitaniumFileGenerator:
         data["proto"]["json_enable"] = enable_json
         data["proto"]["jsmn_path"] = jsmn_path
         data["proto"]["num_var"] = len(self._fields)
+        data["proto"]["json_size"] = 512
+        
+        print(maximum_json_size)
         
         rendered_code = self._template.render(data)
         

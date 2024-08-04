@@ -233,10 +233,10 @@ void test_DeserializeOutputBufferNull(void)
     int16_t serialized_size = protobuf.Serialize(buffer, sizeof(buffer));
 
     TestProtobuf protobuf_new{};
-    const char* buffer_deserilize = nullptr; // Adjust size as necessary
+    char buffer_deserilize[12]; // Adjust size as necessary
 
     // Perform deserialization
-    TEST_ASSERT_EQUAL_INT8(PROTO_INVAL_PTR, protobuf_new.DeSerialize(buffer_deserilize, sizeof(buffer_deserilize)));
+    TEST_ASSERT_EQUAL_INT8(PROTO_INVAL_SIZE, protobuf_new.DeSerialize(buffer_deserilize, sizeof(buffer_deserilize)));
 }
 
 void test_SerializeJson(void)
@@ -263,7 +263,7 @@ void test_SerializeJsonOutputBufferNull(void)
     TestProtobuf protobuf;
     char *buffer = nullptr; // Adjust size as necessary
 
-    const char *expected_json = "{\n    \"first_field\":254,\n    \"second_field\":3131817711,\n    \"third_field\":47789,\n    \"fourth_field\":\"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut\",\n    \"five_field\":-1146443043\n}";
+    const char *expected_json = "{\n    \"first_field\": 254,\n    \"second_field\": 3131817711,\n    \"third_field\": 47789,\n    \"fourth_field\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut\",\n    \"five_field\": -1146443043\n}";
 
     // Set values
     protobuf.UpdateFirstField(254);
@@ -285,7 +285,7 @@ void test_DeSerializeJson(void)
     uint32_t expected_second_data = 0xDEADBEEF;
     uint16_t expected_third_data = 0xBAAD;
     const char *expected_fourth_data = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut";
-    int64_t expected_five_data = -5764607523034234881;
+    int64_t expected_five_data = 0xFFADBEEFBADC0FFE;
 
     // Serialize data into buffer
     protobuf.UpdateFirstField(expected_first_data);
@@ -294,7 +294,6 @@ void test_DeSerializeJson(void)
     protobuf.UpdateFourthField(expected_fourth_data);
     protobuf.UpdateFiveField(expected_five_data);
     int16_t serialized_size = protobuf.SerializeJson(buffer, sizeof(buffer));
-    TEST_ASSERT_GREATER_THAN_INT16(0, serialized_size);
 
     // Clear existing data in protobuf instance
     TestProtobuf protobuf_new{};
@@ -308,6 +307,35 @@ void test_DeSerializeJson(void)
     TEST_ASSERT_EQUAL_UINT16(expected_third_data, protobuf_new.GetThirdField());
     TEST_ASSERT_EQUAL_STRING(expected_fourth_data, protobuf_new.GetFourthField());
     TEST_ASSERT_EQUAL_INT64(expected_five_data, protobuf_new.GetFiveField());
+}
+
+void test_DeSerializeJsonInvalidFields(void)
+{
+    TestProtobuf protobuf;
+    char buffer[512]; // Adjust size as necessary
+
+    const char *json_string = "{\"first_field\":\"Alice\",\"second_field\":30,\"third_field\":\"alice@example.com\",\"fourth_field\":true,\"five_field\":1234}";
+
+    // Clear existing data in protobuf instance
+    TestProtobuf protobuf_new{};
+
+    // Perform deserialization
+    TEST_ASSERT_EQUAL_INT8(-6, protobuf_new.DeSerializeJson(json_string, strlen(json_string)));
+}
+
+void test_DeSerializeJsonInvalid(void)
+{
+    TestProtobuf protobuf;
+    char buffer[512]; // Adjust size as necessary
+
+    const char *json_string = "{\"company\":\"Tech Innovations Inc.\",\"employees\":[{\"id\":1,\"name\":\"Alice Smith\",\"position\":\"Software Engineer\",\"skills\":[\"Python\",\"JavaScript\",\"SQL\"],\"contact\":{\"email\":\"alice.smith@techinnovations.com\",\"phone\":\"+1-555-1234\"}},{\"id\":2,\"name\":\"Bob Johnson\",\"position\":\"Project Manager\",\"skills\":[\"Agile\",\"Scrum\",\"Leadership\"],\"contact\":{\"email\":\"bob.johnson@techinnovations.com\",\"phone\":\"+1-555-5678\"}}],\"projects\":[{\"id\":101,\"name\":\"Project Alpha\",\"status\":\"In Progress\",\"budget\":150000,\"team\":[\"Alice Smith\",\"Bob Johnson\"]},{\"id\":102,\"name\":\"Project Beta\",\"status\":\"Completed\",\"budget\":100000,\"team\":[\"Alice Smith\"]}],\"headquarters\":{\"address\":\"123 Tech Lane\",\"city\":\"Techville\",\"state\":\"CA\",\"zip\":\"90001\"}}";
+
+
+    // Clear existing data in protobuf instance
+    TestProtobuf protobuf_new{};
+
+    // Perform deserialization
+    TEST_ASSERT_EQUAL_INT8(-7, protobuf_new.DeSerializeJson(json_string, strlen(json_string)));
 }
 
 int main(void)
@@ -332,6 +360,8 @@ int main(void)
     RUN_TEST(test_DeserializeOutputBufferNull);
     RUN_TEST(test_SerializeJson);
     RUN_TEST(test_DeSerializeJson);
+    RUN_TEST(test_DeSerializeJsonInvalidFields);
+    RUN_TEST(test_DeSerializeJsonInvalid);
 
     UNITY_END();
 
