@@ -14,6 +14,9 @@ class TitaniumField:
         self._block_size = field_dict.get("maximum_size", self._SINGLE_BLOCK)
         self._token_id = field_dict.get("token_id")
         
+        if self._type_name == "string" and self._block_size <= self._SINGLE_BLOCK:
+                raise ValueError(f"Invalid block size for string field '{self._variable_name}': should be greater than {self._SINGLE_BLOCK}.")
+        
     def _to_pascal_case(self, snake_str: str) -> str:
         """
         Converts a snake_case string to PascalCase.

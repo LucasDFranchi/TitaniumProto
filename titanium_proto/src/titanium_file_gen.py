@@ -214,21 +214,7 @@ private:
 {%- for field in fields %}
     {{ field.c_type_name }} {{ field.internal_name }}{% if field.is_array %}[{{ field.size }}] = {0}{%- else %} = 0{% endif %};
 {%- endfor %}
-
-{%- if proto.json_enable %}
-    const char* _json_string = R"({
-{%- for field in fields %}
-    "{{ field.token_name }}": {{ field.format_specifier }}{% if not loop.last -%},{% endif -%}
-{%- endfor %}
-})";
-
-{%- for field in fields %}  
-    const char* {{ field.internal_name | upper }}_TOKEN_NAME = "{{ field.token_name }}";
-    const uint8_t {{ field.internal_name  | upper }}_TOKEN_ID = {{ field.token_id }};
-{%- endfor %}
-    const uint8_t _NUM_TOKENS  = {{ proto.num_tokens }};
 };
-{%- endif %}
 #endif /* {{ package_name | upper }}_PROTO_H */
 
 """

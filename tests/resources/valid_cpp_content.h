@@ -265,23 +265,5 @@ private:
     uint16_t _third_field = 0;
     char _fourth_field[128] = {0};
     int64_t _five_field = 0;
-    const char* _json_string = R"({
-    "first_field": %u,
-    "second_field": %u,
-    "third_field": %u,
-    "fourth_field": "%s",
-    "five_field": %lld
-})";  
-    const char* _FIRST_FIELD_TOKEN_NAME = "first_field";
-    const uint8_t _FIRST_FIELD_TOKEN_ID = 1;  
-    const char* _SECOND_FIELD_TOKEN_NAME = "second_field";
-    const uint8_t _SECOND_FIELD_TOKEN_ID = 3;  
-    const char* _THIRD_FIELD_TOKEN_NAME = "third_field";
-    const uint8_t _THIRD_FIELD_TOKEN_ID = 5;  
-    const char* _FOURTH_FIELD_TOKEN_NAME = "fourth_field";
-    const uint8_t _FOURTH_FIELD_TOKEN_ID = 7;  
-    const char* _FIVE_FIELD_TOKEN_NAME = "five_field";
-    const uint8_t _FIVE_FIELD_TOKEN_ID = 9;
-    const uint8_t _NUM_TOKENS  = 11;
 };
 #endif /* TEST_PROTO_H */
