@@ -19,7 +19,7 @@ def temp_dir(tmp_path):
     shutil.rmtree(dir_path)
 
 def test_read_file():
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator("h")
     mock_data = json.dumps({"syntax": "titanium1", "package": "testpkg", "fields": []})
     with patch("builtins.open", mock_open(read_data=mock_data)) as mock_file:
         tp._read_file("dummy_path")
@@ -27,19 +27,19 @@ def test_read_file():
         assert tp._content == json.loads(mock_data)
 
 def test_update_package_name():
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator("h")
     tp._content = {"package": "testpkg"}
     tp._update_package_name()
     assert tp._package_name == "testpkg"
 
 def test_update_package_name_missing():
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator("h")
     tp._content = {}
     with pytest.raises(ValueError, match="Missing Package Name in protocol file."):
         tp._update_package_name()
 
 def test_parse_fields_valid():
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator("h")
     tp._content = {
         "fields": [
             {"name": "field1", "type": "uint8_t"},
@@ -69,7 +69,7 @@ def test_parse_fields_valid():
     assert tp._fields[2].size == 128
     
 def test_parse_fields_invalid_type():
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator("h")
     tp._content = {
         "fields": [
             {"name": "field1", "type": "unsupported_type"},
@@ -79,7 +79,7 @@ def test_parse_fields_invalid_type():
         tp._parse_fields()
 
 def test_generate_header_file(temp_dir):   
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator("h")
     tp.import_and_parse_proto_file("./tests/resources/test.json")
     tp.generate_header_file(f"{temp_dir}/", True)
     
