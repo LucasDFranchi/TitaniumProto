@@ -1,7 +1,7 @@
 template_python_string = """import json
 import struct
 
-class TestProtobuf:
+class {{ package_name }}Protobuf:
 {% for field in fields %}
 {%- if field.is_array %}
     {{ field.defined_size }} = {{ field.size }}
@@ -11,9 +11,10 @@ class TestProtobuf:
     PROTO_INVAL_PTR = -1
     PROTO_OVERFLOW = -2
     PROTO_INVAL_SIZE = -3
-    PROTO_INVAL_JSON_PARSE = -4
-    PROTO_INVAL_JSON_KEY = -5
-    PROTO_INVAL_JSON_VALUE = -6
+    PROTO_INVAL_TYPE = -4
+    PROTO_INVAL_JSON_PARSE = -5
+    PROTO_INVAL_JSON_KEY = -6
+    PROTO_INVAL_JSON_VALUE = -7
 
     def __init__(self):
 {%- for field in fields %}
@@ -32,6 +33,8 @@ class TestProtobuf:
 {%- if field.is_array %}
         if value is None:
             return self.PROTO_INVAL_PTR
+        if not isinstance(value, str):
+            return self.PROTO_INVAL_TYPE
         value_length = len(value)
         if value_length == 0 or self.{{ field.defined_size }} == 0:
             return self.PROTO_OVERFLOW
@@ -40,8 +43,11 @@ class TestProtobuf:
         self._fourth_field = value
         return self.PROTO_NO_ERROR
 {%- else %}
-        self.{{ field.internal_name }} = value
-        return self.PROTO_NO_ERROR
+        if isinstance(value, int):        
+            self.{{ field.internal_name }} = value
+            return self.PROTO_NO_ERROR
+
+        return self.PROTO_INVAL_TYPE
 {%- endif %}
 {% endfor %}
     def serialize(self, out_buffer):

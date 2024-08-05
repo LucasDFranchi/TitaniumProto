@@ -83,7 +83,7 @@ def test_generate_header_file(temp_dir):
     tp.import_and_parse_proto_file("./tests/resources/test.json")
     tp.generate_header_file(f"{temp_dir}/", True)
     
-    with open(f"{temp_dir}/TestProto.h", 'r') as generated_cpp_file:
+    with open(f"{temp_dir}/_TestProto.h", 'r') as generated_cpp_file:
         generated_cpp_content = generated_cpp_file.read()
         
     with open("./tests/resources/valid_cpp_content.h", 'r') as generated_cpp_file:

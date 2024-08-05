@@ -1,20 +1,20 @@
 /**
- * @file TestProtobuf.h
+ * @file _TestProtobuf.h
  * @brief Auto-generated header file generated.
  */
 
-#ifndef TEST_PROTO_H
-#define TEST_PROTO_H
+#ifndef _TEST_PROTO_H
+#define _TEST_PROTO_H
 
 #include "stdint.h"
 #include "string.h"
 #include "ArduinoJson.h"
 #include "IProtobuf.h"
 
-class TestProtobuf : public IProtobuf {
+class _TestProtobuf : public IProtobuf {
 public:
-    TestProtobuf() = default;
-    ~TestProtobuf() = default;
+    _TestProtobuf() = default;
+    ~_TestProtobuf() = default;
 
     static constexpr uint16_t FOURTH_FIELD_SIZE = 128;
 
@@ -266,4 +266,4 @@ private:
     char _fourth_field[128] = {0};
     int64_t _five_field = 0;
 };
-#endif /* TEST_PROTO_H */
+#endif /* _TEST_PROTO_H */
