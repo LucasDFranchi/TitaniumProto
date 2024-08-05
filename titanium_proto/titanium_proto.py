@@ -39,20 +39,20 @@ def handle_arguments():
     )
     
     parser.add_argument(
-        "--jsmn_path",
-        help="Add JSON serialization and deserialization.",
+        "--output_extension",
+        help="The extension of the output file (h or py)",
         required=False,
-        default="",
+        default="h",
     )
 
     return parser.parse_args()
 
 def main():
     args = handle_arguments()
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator(args.output_extension)
     
     tp.import_and_parse_proto_file(args.file_path, args.raw_data)
-    tp.generate_header_file(args.output_path, args.enable_json, args.jsmn_path)
+    tp.generate_header_file(args.output_path, args.enable_json)
 
 
 if __name__ == "__main__":

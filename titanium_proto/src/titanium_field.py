@@ -13,10 +13,12 @@ class TitaniumField:
         self._variable_name = field_dict.get("name")
         self._block_size = field_dict.get("maximum_size", self._SINGLE_BLOCK)
         self._token_id = field_dict.get("token_id")
-        
+
         if self._type_name == "string" and self._block_size <= self._SINGLE_BLOCK:
-                raise ValueError(f"Invalid block size for string field '{self._variable_name}': should be greater than {self._SINGLE_BLOCK}.")
-        
+            raise ValueError(
+                f"Invalid block size for string field '{self._variable_name}': should be greater than {self._SINGLE_BLOCK}."
+            )
+
     def _to_pascal_case(self, snake_str: str) -> str:
         """
         Converts a snake_case string to PascalCase.
@@ -26,10 +28,10 @@ class TitaniumField:
 
         Returns:
             str: The converted PascalCase string.
-            """
-        components = snake_str.split('_')
-        return ''.join(x.title() for x in components)
-    
+        """
+        components = snake_str.split("_")
+        return "".join(x.title() for x in components)
+
     def to_dict(self):
         field_dict = {}
         field_dict["internal_name"] = self.internal_name
@@ -39,8 +41,9 @@ class TitaniumField:
         field_dict["defined_size"] = self.defined_size
         field_dict["size"] = self.size
         field_dict["token_name"] = self.token_name
-        
-        return field_dict   
+        field_dict["c_to_struct"] = self.c_to_struct
+
+        return field_dict
 
     @property
     def c_type_name(self):
@@ -115,7 +118,23 @@ class TitaniumField:
             str: The defined size name.
         """
         return f"{self._variable_name.upper()}_SIZE" if self.is_array else None
-    
+
+    @property
+    def c_to_struct(self):
+        c_to_struct = {
+            "uint8_t": "B",
+            "int8_t": "b",
+            "uint16_t": "H",
+            "int16_t": "h",
+            "uint32_t": "I",
+            "int32_t": "i",
+            "uint64_t": "Q",  
+            "int64_t": "q",
+            "char": "c",
+        }
+
+        return c_to_struct.get(self.c_type_name)
+
     @property
     def maximum_field_length(self):
         type_ranges = {
@@ -128,9 +147,9 @@ class TitaniumField:
             "int32_t": "-2147483647",
             "int64_t": "-9223372036854775807",
         }
-        
+
         maximum_str = None
-        
+
         if self._type_name == "string":
             maximum_str = "-" * self._block_size
         else:
