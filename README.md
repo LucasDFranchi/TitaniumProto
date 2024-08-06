@@ -13,6 +13,22 @@ I created this project to streamline the process of defining and managing data s
 - Easy integration into existing C++ projects.
 - Lightweight and suitable for embedded systems.
 
+## Limitations
+
+- The maximum string size is 256 bytes.
+- The maximum Json size is 1024 bytes.
+- The library doesn't support Json Arrays. [wip]
+- The library doesn't support nested Json.
+
+## Why Rely on ArduinoJson?
+
+In the realm of C and C++ programming, there are several popular libraries for handling JSON, such as jsmn, cJSON, and nlohmann's JSON. However, each of these libraries has its limitations:
+
+  -  jsmn: This library does not support JSON serialization, only parsing.
+  -  cJSON and nlohmann's JSON: Both of these libraries rely on heap allocation for JSON serialization and parsing. This can pose challenges in embedded environments using operating systems like FreeRTOS, as they depend on functions like malloc, realloc, and free, which may not be fully compatible with FreeRTOS.
+
+ArduinoJson version 6 addresses these issues by supporting JSON parsing and serialization using stack allocation. This approach avoids problems associated with custom allocators in FreeRTOS and mitigates issues like heap fragmentation and memory leaks. However, it's important to note that using stack allocation may lead to stack overflow with larger JSON files, so ArduinoJson is best suited for handling smaller JSON files.
+
 ## Installation
 
 To install TitaniumProto, you can use pip or clone the repository and install dependencies:
