@@ -1,6 +1,6 @@
 {
   "syntax": "titanium1",
-  "package": "Test",
+  "package": "_Test",
   "fields": [
     {
       "type": "uint8_t",

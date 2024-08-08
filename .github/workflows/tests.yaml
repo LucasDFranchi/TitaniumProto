@@ -29,6 +29,7 @@ jobs:
 
       - name: Run Python tests
         run: |
+          poetry run titanium-proto -fp tests/cpp/test.json -o tests/python/ --enable_json --output_extension py
           poetry run pytest tests/ -W ignore::DeprecationWarning
 
       - name: Install Unity
