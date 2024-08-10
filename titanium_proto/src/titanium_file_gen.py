@@ -137,7 +137,7 @@ class TitaniumFileGenerator:
         data["proto"]["serialized_size"] =  " + ".join(serialized_size_list) + f" + {len(self._fields)}"
         data["proto"]["maximum_size"] = " + ".join(maximum_size_list)
         data["proto"]["minimum_size"] = " + ".join(minimum_size_list) + f" + {num_of_arrays}"
-        data["proto"]["static_maximum_size"] = " + ".join(static_maximum_size_list)
+        data["proto"]["static_maximum_size"] = " + ".join(static_maximum_size_list) + f" + {len(self._fields)}"
         data["proto"]["json_enable"] = enable_json
         data["proto"]["num_var"] = len(self._fields)
         data["proto"]["json_size"] = 512

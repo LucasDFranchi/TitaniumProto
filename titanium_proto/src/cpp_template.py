@@ -9,7 +9,7 @@ template_cpp_string = """/**
 #include "stdint.h"
 #include "string.h"
 {%- if proto.json_enable %}
-#include "ArduinoJson.h"
+#include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
 {%- endif %}
 #include "IProtobuf.h"
 
@@ -91,6 +91,7 @@ public:
 {% endfor %}
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
         uint16_t data_position = 0;
+        uint8_t length = 0;
         if (out_buffer == nullptr) {
             return 0;
         }
@@ -106,7 +107,7 @@ public:
         memcpy(&out_buffer[data_position], &this->{{ field.internal_name }}, sizeof(this->{{ field.internal_name }}));
         data_position += sizeof(this->{{ field.internal_name }});
     {%- elif field.c_type_name == 'char' %}
-        uint8_t length = strlen(this->{{ field.internal_name }});
+        length = strlen(this->{{ field.internal_name }});
         out_buffer[data_position++] = length;
         memcpy(&out_buffer[data_position], this->{{ field.internal_name }}, length);
         data_position += length;
@@ -140,11 +141,11 @@ public:
         memcpy(&this->{{ field.internal_name }}, &in_buffer[data_position], size);
         data_position += size;
     {% elif field.c_type_name == 'char' %}
-        uint8_t length = in_buffer[data_position++];
-        if (length + data_position > in_buffer_size) return 0;
-        memcpy(this->{{ field.internal_name }}, &in_buffer[data_position], length);
-        this->{{ field.internal_name }}[length] = '\\0';
-        data_position += length;
+        size = in_buffer[data_position++];
+        if (size + data_position > in_buffer_size) return 0;
+        memcpy(this->{{ field.internal_name }}, &in_buffer[data_position], size);
+        this->{{ field.internal_name }}[size] = '\\0';
+        data_position += size;
     {%- endif %}
 {%- endfor %}
         return PROTO_NO_ERROR;
