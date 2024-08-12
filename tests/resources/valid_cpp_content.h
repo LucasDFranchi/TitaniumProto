@@ -25,7 +25,7 @@ public:
     int64_t GetFiveField(void) const { return this->_five_field; }
 
     int16_t GetSerializedSize(void) const {
-        return (sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + strlen(this->_fourth_field) + sizeof(this->_five_field) + 5);
+        return (sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + strlen(this->_fourth_field) + sizeof(this->_five_field));
     }
 
     int16_t GetMaxSize(void) const {
@@ -97,83 +97,55 @@ public:
     }
 
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
-        uint16_t data_position = 0;
         if (out_buffer == nullptr) {
             return 0;
         }
 
-        uint16_t serialized_size = sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + strlen(this->_fourth_field) + sizeof(this->_five_field) + 5;
+        uint16_t serialized_size = sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + strlen(this->_fourth_field) + sizeof(this->_five_field);
 
         if (out_buffer_size < serialized_size) {
             return 0;
-        }  
+        }
 
-        out_buffer[data_position++] = sizeof(this->_first_field);
-        memcpy(&out_buffer[data_position], &this->_first_field, sizeof(this->_first_field));
-        data_position += sizeof(this->_first_field);
+        uint16_t offset = 0;
 
-        out_buffer[data_position++] = sizeof(this->_second_field);
-        memcpy(&out_buffer[data_position], &this->_second_field, sizeof(this->_second_field));
-        data_position += sizeof(this->_second_field);
-
-        out_buffer[data_position++] = sizeof(this->_third_field);
-        memcpy(&out_buffer[data_position], &this->_third_field, sizeof(this->_third_field));
-        data_position += sizeof(this->_third_field);
-
-        uint8_t length = strlen(this->_fourth_field);
-        out_buffer[data_position++] = length;
-        memcpy(&out_buffer[data_position], this->_fourth_field, length);
-        data_position += length;
-
-        out_buffer[data_position++] = sizeof(this->_five_field);
-        memcpy(&out_buffer[data_position], &this->_five_field, sizeof(this->_five_field));
-        data_position += sizeof(this->_five_field);
+        memcpy(&out_buffer[offset], &this->_first_field, sizeof(this->_first_field));
+        offset += sizeof(this->_first_field);
+        memcpy(&out_buffer[offset], &this->_second_field, sizeof(this->_second_field));
+        offset += sizeof(this->_second_field);
+        memcpy(&out_buffer[offset], &this->_third_field, sizeof(this->_third_field));
+        offset += sizeof(this->_third_field);
+        memcpy(&out_buffer[offset], this->_fourth_field, strlen(this->_fourth_field) + 1);
+        offset += strlen(this->_fourth_field) + 1;
+        memcpy(&out_buffer[offset], &this->_five_field, sizeof(this->_five_field));
 
         return serialized_size;
     }
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
-        uint16_t data_position = 0;
-        uint8_t size = 0;
-                
         if (in_buffer == nullptr) {
-            return PROTO_INVAL_PTR;
+            return -1;
         }
 
         uint16_t deserialized_min_size = sizeof(this->_first_field) + sizeof(this->_second_field) + sizeof(this->_third_field) + sizeof(this->_five_field) + 1;
 
         if (in_buffer_size < deserialized_min_size) {
-            return PROTO_INVAL_SIZE;
+            return -3;
         }
-
         memset(this->_fourth_field, 0, FOURTH_FIELD_SIZE);
 
-        size = in_buffer[data_position++];
-        if (size + data_position > in_buffer_size) return 0;
-        memcpy(&this->_first_field, &in_buffer[data_position], size);
-        data_position += size;
-    
-        size = in_buffer[data_position++];
-        if (size + data_position > in_buffer_size) return 0;
-        memcpy(&this->_second_field, &in_buffer[data_position], size);
-        data_position += size;
-    
-        size = in_buffer[data_position++];
-        if (size + data_position > in_buffer_size) return 0;
-        memcpy(&this->_third_field, &in_buffer[data_position], size);
-        data_position += size;
-    
-        uint8_t length = in_buffer[data_position++];
-        if (length + data_position > in_buffer_size) return 0;
-        memcpy(this->_fourth_field, &in_buffer[data_position], length);
-        this->_fourth_field[length] = '\0';
-        data_position += length;
-        size = in_buffer[data_position++];
-        if (size + data_position > in_buffer_size) return 0;
-        memcpy(&this->_five_field, &in_buffer[data_position], size);
-        data_position += size;
-    
-        return PROTO_NO_ERROR;
+        uint16_t offset = 0;
+        memcpy(&this->_first_field, &in_buffer[offset], sizeof(this->_first_field));
+        offset += sizeof(this->_first_field);
+        memcpy(&this->_second_field, &in_buffer[offset], sizeof(this->_second_field));
+        offset += sizeof(this->_second_field);
+        memcpy(&this->_third_field, &in_buffer[offset], sizeof(this->_third_field));
+        offset += sizeof(this->_third_field);
+        memcpy(this->_fourth_field, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
+        offset += strlen(&in_buffer[offset]) + 1;
+        memcpy(&this->_five_field, &in_buffer[offset], sizeof(this->_five_field));
+
+        return 0;
     }
 
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {

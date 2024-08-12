@@ -9,7 +9,7 @@ template_cpp_string = """/**
 #include "stdint.h"
 #include "string.h"
 {%- if proto.json_enable %}
-#include "Libraries/JSON/ArduinoJson/ArduinoJson.h"
+#include "{{ proto.json_path }}ArduinoJson.h"
 {%- endif %}
 #include "IProtobuf.h"
 
@@ -90,8 +90,6 @@ public:
 {% endif -%}
 {% endfor %}
     int16_t Serialize(char* out_buffer, uint16_t out_buffer_size) const {
-        uint16_t data_position = 0;
-        uint8_t length = 0;
         if (out_buffer == nullptr) {
             return 0;
         }
@@ -100,55 +98,59 @@ public:
 
         if (out_buffer_size < serialized_size) {
             return 0;
-        }  
+        }
+
+        uint16_t offset = 0;
 {% for field in fields -%}
-    {%- if field.c_type_name in ['uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t', 'int64_t'] %}
-        out_buffer[data_position++] = sizeof(this->{{ field.internal_name }});
-        memcpy(&out_buffer[data_position], &this->{{ field.internal_name }}, sizeof(this->{{ field.internal_name }}));
-        data_position += sizeof(this->{{ field.internal_name }});
-    {%- elif field.c_type_name == 'char' %}
-        length = strlen(this->{{ field.internal_name }});
-        out_buffer[data_position++] = length;
-        memcpy(&out_buffer[data_position], this->{{ field.internal_name }}, length);
-        data_position += length;
-    {%- endif %}
-{% endfor %}
+{%- if field.is_array %}
+        memcpy(&out_buffer[offset], this->{{ field.internal_name }}, strlen(this->{{ field.internal_name }}) + 1);
+{%- if not loop.last %}
+        offset += strlen(this->{{ field.internal_name }}) + 1;
+{%- endif %}
+{%- else %}
+        memcpy(&out_buffer[offset], &this->{{ field.internal_name }}, sizeof(this->{{ field.internal_name }}));
+{%- if not loop.last %}
+        offset += sizeof(this->{{ field.internal_name }});
+{%- endif %}
+{%- endif %}
+{%- endfor %}
+
         return serialized_size;
     }
 
     int8_t DeSerialize(const char* in_buffer, uint16_t in_buffer_size) {
-        uint16_t data_position = 0;
-        uint8_t size = 0;
-                
         if (in_buffer == nullptr) {
-            return PROTO_INVAL_PTR;
+            return -1;
         }
 
         uint16_t deserialized_min_size = {{ proto.minimum_size }};
 
         if (in_buffer_size < deserialized_min_size) {
-            return PROTO_INVAL_SIZE;
+            return -3;
         }
-{% for field in fields -%}
+{%- for field in fields %}
 {%- if field.is_array %}
         memset(this->{{ field.internal_name }}, 0, {{ field.defined_size }});
-{%- endif -%}
+{%- endif %}
 {%- endfor %}
-{% for field in fields -%}
-    {% if field.c_type_name in ['uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t', 'int64_t', ] %}
-        size = in_buffer[data_position++];
-        if (size + data_position > in_buffer_size) return 0;
-        memcpy(&this->{{ field.internal_name }}, &in_buffer[data_position], size);
-        data_position += size;
-    {% elif field.c_type_name == 'char' %}
-        size = in_buffer[data_position++];
-        if (size + data_position > in_buffer_size) return 0;
-        memcpy(this->{{ field.internal_name }}, &in_buffer[data_position], size);
-        this->{{ field.internal_name }}[size] = '\\0';
-        data_position += size;
-    {%- endif %}
+
+        uint16_t offset = 0;
+
+{%- for field in fields %}
+{%- if field.is_array %}
+        memcpy(this->{{ field.internal_name }}, &in_buffer[offset], strlen(&in_buffer[offset]) + 1);
+{%- if not loop.last %}
+        offset += strlen(&in_buffer[offset]) + 1;
+{%- endif %}
+{%- else %}
+        memcpy(&this->{{ field.internal_name }}, &in_buffer[offset], sizeof(this->{{ field.internal_name }}));
+{%- if not loop.last %}
+        offset += sizeof(this->{{ field.internal_name }});
+{%- endif %}
+{%- endif %}
 {%- endfor %}
-        return PROTO_NO_ERROR;
+
+        return 0;
     }
 {% if proto.json_enable %}
     int32_t SerializeJson(char* out_buffer, uint16_t out_buffer_size) {

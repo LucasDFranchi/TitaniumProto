@@ -44,6 +44,13 @@ def handle_arguments():
         required=False,
         default="h",
     )
+    
+    parser.add_argument(
+        "--json_path",
+        help="Filepath to the JSON Arduino LIbrary",
+        required=False,
+        default="",
+    )
 
     return parser.parse_args()
 
@@ -52,7 +59,7 @@ def main():
     tp = TitaniumFileGenerator(args.output_extension)
     
     tp.import_and_parse_proto_file(args.file_path, args.raw_data)
-    tp.generate_header_file(args.output_path, args.enable_json)
+    tp.generate_header_file(args.output_path, args.enable_json, args.json_path)
 
 
 if __name__ == "__main__":

@@ -106,7 +106,7 @@ class TitaniumFileGenerator:
         self._update_package_name()
         self._parse_fields()
         
-    def generate_header_file(self, redirect_outfile: str = "", enable_json: bool = False):
+    def generate_header_file(self, redirect_outfile: str = "", enable_json: bool = False, json_path: str = ""):
         data = {}
         maximum_json_size = {}
         serialized_size_list = []
@@ -134,14 +134,15 @@ class TitaniumFileGenerator:
             maximum_size_list.append(f"sizeof(this->{field.internal_name})")
 
         data["proto"] = {}            
-        data["proto"]["serialized_size"] =  " + ".join(serialized_size_list) + f" + {len(self._fields)}"
+        data["proto"]["serialized_size"] =  " + ".join(serialized_size_list)
         data["proto"]["maximum_size"] = " + ".join(maximum_size_list)
         data["proto"]["minimum_size"] = " + ".join(minimum_size_list) + f" + {num_of_arrays}"
-        data["proto"]["static_maximum_size"] = " + ".join(static_maximum_size_list) + f" + {len(self._fields)}"
+        data["proto"]["static_maximum_size"] = " + ".join(static_maximum_size_list)
         data["proto"]["json_enable"] = enable_json
         data["proto"]["num_var"] = len(self._fields)
         data["proto"]["json_size"] = 512
         data["proto"]["unpack_string"] = self._unpack_string()
+        data["proto"]["json_path"] = json_path
         
         rendered_code = self._template.render(data)
             
