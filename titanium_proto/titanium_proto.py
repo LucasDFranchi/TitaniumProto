@@ -39,8 +39,15 @@ def handle_arguments():
     )
     
     parser.add_argument(
-        "--jsmn_path",
-        help="Add JSON serialization and deserialization.",
+        "--output_extension",
+        help="The extension of the output file (h or py)",
+        required=False,
+        default="h",
+    )
+    
+    parser.add_argument(
+        "--json_path",
+        help="Filepath to the JSON Arduino LIbrary",
         required=False,
         default="",
     )
@@ -49,10 +56,10 @@ def handle_arguments():
 
 def main():
     args = handle_arguments()
-    tp = TitaniumFileGenerator()
+    tp = TitaniumFileGenerator(args.output_extension)
     
     tp.import_and_parse_proto_file(args.file_path, args.raw_data)
-    tp.generate_header_file(args.output_path, args.enable_json, args.jsmn_path)
+    tp.generate_header_file(args.output_path, args.enable_json, args.json_path)
 
 
 if __name__ == "__main__":
