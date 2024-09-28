@@ -40,7 +40,7 @@ class {{ package_name }}Protobuf:
             return self.PROTO_OVERFLOW
         if value_length > self.{{ field.defined_size }}:
             return self.PROTO_INVAL_SIZE
-        self._fourth_field = value
+        field.internal_name = value
         return self.PROTO_NO_ERROR
 {%- else %}
         if isinstance(value, int):        
@@ -78,7 +78,7 @@ class {{ package_name }}Protobuf:
 {%- if field.is_array %}
             self.{{ field.token_name }}_size = struct.unpack_from('B', data, data_position)[0]
             data_position += 1
-            self._fourth_field = struct.unpack_from(
+            self.{{ field.internal_name }} = struct.unpack_from(
                 '{}s'.format(self.{{ field.token_name }}_size),
                 data,
                 data_position
