@@ -1,88 +1,58 @@
-# TitaniumProto
+# Protobufs Compiler
 
-TitaniumProto is a Python library designed to facilitate working with C++ structs. It reads a JSON file in a specific format and converts it into a C++ class that closely mirrors the JSON structure. The generated class includes methods for serializing and deserializing data, making it suitable for embedded systems and other applications requiring efficient data handling.
-
-## Motivation
-
-I created this project to streamline the process of defining and managing data structures in C++ projects. By using a JSON-based format, TitaniumProto enables quick prototyping and seamless integration of structured data into C++ applications. The generated C++ classes offer serialization and deserialization capabilities, ensuring data integrity and efficiency in memory-constrained environments.
+This project is a protobufs compiler that compiles Protocol Buffers (protobuf) definitions into either C source files or Python modules. The compilation is executed within a Docker container, ensuring a consistent and isolated build environment.
 
 ## Features
 
-- Converts JSON definitions into C++ class structures.
-- Supports serialization and deserialization of data.
-- Easy integration into existing C++ projects.
-- Lightweight and suitable for embedded systems.
+- **Multi-language Support**: Compile protobuf files to C or Python based on user input.
+- **Docker Integration**: The compilation process is contained within a Docker container, simplifying dependencies and environment setup.
 
-## Installation
+## Getting Started
 
-To install TitaniumProto, you can use pip or clone the repository and install dependencies:
+### Prerequisites
 
-Windows
+- [Docker](https://www.docker.com/) installed on your machine.
+- Basic knowledge of Protocol Buffers and the languages you want to compile to.
 
-```bash
-pip install titanium-proto
-```
+### Installation
 
-Linux
+1. Clone this repository:
 
-```bash
-pip3 install titanium-proto
-```
+   ```bash
+   git clone https://github.com/LucasDFranchi/TitaniumProto.git
+   cd TitaniumProto
+   ```
 
-Installation using clone and poetry:
+2. Build the Docker image:
 
-```bash
-git clone https://github.com/your_username/titanium-proto.git
-cd titanium-proto
-poetry install
-```
+   ```bash
+   docker build -t protobuf-compiler .
+   ```
 
 ### Usage
 
-Define Your JSON Structure: Create a JSON file following the specified format.
-Generate C++ Class: Use TitaniumProto to convert the JSON into a C++ class.
-Integrate: Include the generated C++ class in your project and utilize its methods for data handling.
+To compile a protobuf file, use the following command:
 
+```bash
+sh run.sh -fp input_file.proto -e output_type
+```
 
-### Supported Types
-The library supports the following data types, each with specific attributes:
-
-- **uint8_t**
-- **int8_t**
-- **uint16_t**
-- **int16_t**
-- **uint32_t**
-- **int32_t**
-- **uint64_t**
-- **int64_t**
-- **float**
-- **double**
-- **string**: This type should have a `maximum_size` associated.
+Replace `<input_file.proto>` with the path to your protobuf file and `<output_type>` with either `c` for C files or `python` for Python modules.
 
 ### Example
 
-Consider a JSON file example.json:
-
-``` json
-{
-  "package": "ExamplePackage",
-  "syntax": "titanium1",
-  "fields": [
-    { "name": "id", "type": "uint32_t" },
-    { "name": "name", "type": "string", "maximum_size": 32 },
-    { "name": "value", "type": "double" }
-  ]
-}
-```
-Generate the C++ class:
+To compile a protobuf file to Python, run:
 
 ```bash
-titanium-proto -fp example.json
+docker run --rm -v $(pwd):/data protobuf-compiler titanium.proto --extension py
 ```
-The above command creates a C++ class ExamplePackageProto with methods for accessing, serializing, and deserializing fields.
-Contributing
 
-Contributions are welcome! Fork the repository, make your changes, and submit a pull request. For major changes, please open an issue first to discuss what you would like to change.
- ## License
+This will generate a Python module in the current directory.
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+## Contributing
+
+Contributions are welcome! Please submit a pull request or open an issue for any enhancements or bugs.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
