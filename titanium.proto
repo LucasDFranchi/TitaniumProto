@@ -1,5 +1,5 @@
 syntax = "proto2";
-import "google/protobuf/descriptor.proto";
+import "nanopb.proto";
 
 // Enumeration for representing the status of network connections.
 enum NetworkStatus {

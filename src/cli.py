@@ -92,8 +92,15 @@ def create_python_module(filepath: str):
     """
     filename = os.path.basename(filepath)
     filename_without_extension = os.path.splitext(filename)[0]
-    os.system(f"mkdir /app/output/{filename_without_extension}")
-    os.system(f"cp /app/src/resources/* /app/output/{filename_without_extension}/*")
+    os.makedirs(f"/app/output/{filename_without_extension}", exist_ok=True)
+    
+    source_dir = "/app/resources/"
+    destination_dir = f"/app/output/{filename_without_extension}/"
+    os.system("ls -lah && cd resources && ls -lah")
+    if os.path.exists(source_dir) and os.listdir(source_dir):
+        os.system(f"cp {source_dir}* {destination_dir}")
+    else:
+        print(f"No files to copy from {source_dir} or directory does not exist.")
 
     return filename_without_extension
 
@@ -117,7 +124,7 @@ def process_python_file(filepath: str):
     temp_file = proto_file.replace('import "nanopb.proto";', nanopb_file)
     write_proto_file(os.path.join("/app/tmp/titanium_tmp.proto"), temp_file)
 
-    module_name = create_python_module()
+    module_name = create_python_module(filepath)
     os.system(f"cd /app/tmp/ && protoc --python_out=/app/output/{module_name} titanium_tmp.proto")
 
 def process_c_file(filepath: str):
